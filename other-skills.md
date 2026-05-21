@@ -19,3 +19,8 @@ ast-grep --version
 ```bash
 curl -fsSL https://raw.githubusercontent.com/JuliusBrussee/caveman/main/install.sh | bash
 ```
+
+# goalbuddy
+
+[link of goalbuddy](https://github.com/tolibear/goalbuddy#)
+
