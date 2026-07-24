@@ -1,0 +1,32 @@
+{
+  "skill_name": "spec-review",
+  "evals": [
+    {
+      "id": 0,
+      "eval_name": "workflow-with-retry-count",
+      "prompt": "Review the spec at `specs/workflow-retry.md`",
+      "expected_output": "Spec reviewed, user asked about retry behavior, spec updated to reflect user's intent",
+      "files": [
+        "specs/workflow-retry.md"
+      ]
+    },
+    {
+      "id": 1,
+      "eval_name": "data-processing-output-path",
+      "prompt": "Check my agent spec at `specs/data-pipeline.md`",
+      "expected_output": "Spec reviewed, user asked about output path, spec updated with configurable path",
+      "files": [
+        "specs/data-pipeline.md"
+      ]
+    },
+    {
+      "id": 2,
+      "eval_name": "notification-agent-logging",
+      "prompt": "Go over this spec: `specs/notification-agent.md`",
+      "expected_output": "Spec reviewed, user asked about logging verbosity, spec updated based on answer",
+      "files": [
+        "specs/notification-agent.md"
+      ]
+    }
+  ]
+}

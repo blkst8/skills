@@ -1,0 +1,26 @@
+{
+  "skill_name": "feature-manager",
+  "evals": [
+    {
+      "id": 1,
+      "name": "auth-feature-decomposition",
+      "prompt": "Run feature-manager on /tmp/feature-manager-test/specs/auth.md. Use project name 'auth-service'.",
+      "expected_output": "A roadmap file at /tmp/FEATURE-Manager-auth-service-{timestamp}.md with goals covering registration, login, JWT middleware, and logout, each with 3+ tasks covering the spec sections.",
+      "files": ["/tmp/feature-manager-test/specs/auth.md"]
+    },
+    {
+      "id": 2,
+      "name": "notifications-decomposition",
+      "prompt": "feature-manager /tmp/feature-manager-test/specs/notifications.md --project notifications",
+      "expected_output": "A roadmap file at /tmp/FEATURE-Manager-notifications-{timestamp}.md with goals covering storage, REST endpoints, realtime push, UI, and rules, each with 3+ tasks.",
+      "files": ["/tmp/feature-manager-test/specs/notifications.md"]
+    },
+    {
+      "id": 3,
+      "name": "small-feature-merge",
+      "prompt": "Run feature-manager on /tmp/feature-manager-test/specs/export-button.md. Project name 'reports'.",
+      "expected_output": "A roadmap file at /tmp/FEATURE-Manager-reports-{timestamp}.md. The spec is small; expect 1-2 goals with 3+ tasks each (testing the merge mechanism for what would otherwise be tiny goals).",
+      "files": ["/tmp/feature-manager-test/specs/export-button.md"]
+    }
+  ]
+}
