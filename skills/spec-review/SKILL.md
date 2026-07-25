@@ -40,7 +40,7 @@ the agent to send an OTP email and wait for the user to reply with the code"*.
 
 ## Step 3 — Ask validation questions
 
-Construct 3–5 short questions that test whether the documented behavior matches
+Construct 3–10 short questions that test whether the documented behavior matches
 the user's real intent. Each question should cover a distinct part of the spec.
 Examples:
 - "In section 4 the spec says the agent should retry 3 times. Do you actually
