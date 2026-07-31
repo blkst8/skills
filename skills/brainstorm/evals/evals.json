@@ -1,0 +1,47 @@
+{
+  "skill_name": "brainstorm",
+  "evals": [
+    {
+      "id": 0,
+      "eval_name": "email-validation-no-idea",
+      "prompt": "We need to validate email addresses in our signup form. What's the best way?",
+      "expected_output": "Skill declares 'Your idea: none', generates candidate roots from the issue alone, recommends an MVP path (likely confirmation email + light regex, no new deps), scores on all four measurements.",
+      "files": []
+    },
+    {
+      "id": 1,
+      "eval_name": "oauth-migration-quality",
+      "prompt": "Need to migrate our app's auth from session cookies to OAuth2, supporting Google, GitHub, and Microsoft as identity providers. Idea was to just use requests-oauthlib and call it a day. Help me think this through.",
+      "expected_output": "Recommendation that picks the Quality path (justification: 3 providers need structure), with structured provider adapters, Authlib or equivalent rationale, four measurement scores, runner-up should be the MVP requests-oauthlib-direct version.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "eval_name": "csv-oom-streaming",
+      "prompt": "Our CSV export job keeps OOM-killing on files bigger than 500MB. How should we fix this?",
+      "expected_output": "Skill generates candidate roots from the issue alone (no initial idea provided), recommends streaming-based approach, scores on all four measurements, recommends MVP path likely with rate >= 4.0.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "eval_name": "rate-limiter-pinia-mvp",
+      "prompt": "We're hitting our public API's rate limit when bulk-importing users (we need to import ~2000 users in one job). My idea is to add Pinia to our Vue frontend to track the import queue. Help me think this through.",
+      "expected_output": "MVP path wins: rate-limit retry/backoff in the backend importer is the correct fix; a frontend Pinia store does not solve the problem and adds an unnecessary client-side dep.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "eval_name": "search-pg-to-elastic-quality",
+      "prompt": "Our Postgres full-text search has been good enough, but we're adding faceted filters (category, price range, in-stock), typo tolerance, and we want to rank results by relevance. We've heard Elasticsearch is the standard for this. Should we migrate?",
+      "expected_output": "Quality path: at this scope (facets + typo tolerance + relevance ranking), Postgres FTS degrades; recommend a structured approach — either a dedicated search service (Meilisearch / Typesense / OpenSearch) or pg_trgm + tsvector hybrid if staying on Postgres is a hard constraint. Do not recommend 'just add an index'.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "eval_name": "user-pushback-mvp-revisit",
+      "prompt": "I'm building a CLI tool that does one thing: converts JSON to CSV. My friend said I should use Cobra. Honestly I just want to ship this tonight. What's the best way?",
+      "expected_output": "MVP path wins: a tiny stdlib-based CLI (argparse / flag) is the right call for a one-off; Cobra is a real dep for a one-shot tool. Skill should respect the user's stated scope (tonight / one-shot) and not over-engineer.",
+      "files": []
+    }
+  ]
+}
