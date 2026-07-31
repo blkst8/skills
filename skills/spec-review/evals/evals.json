@@ -3,29 +3,38 @@
   "evals": [
     {
       "id": 0,
-      "eval_name": "workflow-with-retry-count",
-      "prompt": "Review the spec at `specs/workflow-retry.md`",
-      "expected_output": "Spec reviewed, user asked about retry behavior, spec updated to reflect user's intent",
+      "eval_name": "workflow-retry-yes-flow",
+      "prompt": "Review the spec at `evals/specs/workflow-retry.md`",
+      "expected_output": "Skill reads the spec, presents a general view (2-3 sentences), then asks validation questions ONE AT A TIME about distinct parts of the spec. The first question should concern the retry behavior in Step 5 (retry 3 times). Ends each question with the three-option prompt `y / n / tell you correct way`. Does NOT batch all questions at once.",
       "files": [
-        "specs/workflow-retry.md"
+        "evals/specs/workflow-retry.md"
       ]
     },
     {
       "id": 1,
-      "eval_name": "data-processing-output-path",
-      "prompt": "Check my agent spec at `specs/data-pipeline.md`",
-      "expected_output": "Spec reviewed, user asked about output path, spec updated with configurable path",
+      "eval_name": "data-pipeline-output-path",
+      "prompt": "Check my agent spec at `evals/specs/data-pipeline.md`",
+      "expected_output": "Skill reads the spec, presents a general view, then asks validation questions ONE AT A TIME. Should ask about the hard-coded output path `/tmp/output.csv` in Step 4 — this is the obvious candidate for a question about configurability.",
       "files": [
-        "specs/data-pipeline.md"
+        "evals/specs/data-pipeline.md"
       ]
     },
     {
       "id": 2,
-      "eval_name": "notification-agent-logging",
-      "prompt": "Go over this spec: `specs/notification-agent.md`",
-      "expected_output": "Spec reviewed, user asked about logging verbosity, spec updated based on answer",
+      "eval_name": "notification-logging-verbosity",
+      "prompt": "Go over this spec: `evals/specs/notification-agent.md`",
+      "expected_output": "Skill reads the spec, presents a general view, then asks validation questions ONE AT A TIME. Should ask about the verbose console logging in Step 5 ('at every step for debugging') — the obvious candidate for a question about verbosity.",
       "files": [
-        "specs/notification-agent.md"
+        "evals/specs/notification-agent.md"
+      ]
+    },
+    {
+      "id": 3,
+      "eval_name": "override-tell-you-correct-way",
+      "prompt": "Review the spec at `evals/specs/workflow-retry.md` — I want to test the override path. Walk me through the questions and when you get to one about the retry behavior (Step 5: 'retry 3 times'), you answer for me with 'tell you correct way: retry once with exponential backoff, no fixed count'. For all other questions, answer 'yes'.",
+      "expected_output": "Skill reads the spec, presents a general view, then asks validation questions one at a time. Demonstrates it can handle the 'tell you correct way' override format: when the user provides a correction, the skill acknowledges it as an override and applies the user's text (retry once with exponential backoff) instead of the spec line.",
+      "files": [
+        "evals/specs/workflow-retry.md"
       ]
     }
   ]
