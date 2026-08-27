@@ -6,7 +6,7 @@
 
 ### A personal arsenal of agent skills — small, opinionated, load-bearing.
 
-[![Skills](https://img.shields.io/badge/skills-5-blueviolet)](#-the-skills)
+[![Skills](https://img.shields.io/badge/skills-6-blueviolet)](#-the-skills)
 [![Platform](https://img.shields.io/badge/agents-Claude%20%7C%20Codex%20%7C%20Cursor-success)](#-installation)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](#-license)
 [![Format](https://img.shields.io/badge/format-SKILL.md-orange)](#-anatomy)
@@ -39,14 +39,16 @@ This repository is my **personal collection of agent skills** — self-contained
 | [**`brainstorm`**](skills/brainstorm/SKILL.md) | Evaluate a developer's engineering problem against four measurements (complexity, dependency, maintainability, extendability) from MVP and Quality perspectives, then recommend the best approach with a rate out of 5. | — |
 | [**`spec-review`**](skills/spec-review/SKILL.md) | Interactive review of an agent-spec `.md` file: one validation question at a time, answered with `y / n / tell you correct way` — applies corrections only after the user confirms. | — |
 | [**`feature-manager`**](skills/feature-manager/SKILL.md) | Decompose a markdown feature spec into a structured roadmap of goals + tasks, written to a versioned `/tmp/` checklist. | — |
+| [**`go-codebase-style`**](skills/go-codebase-style/SKILL.md) | Generate, scaffold, and review Go code following the blkst8 layered architecture (handlers → usecase → repository/service), with Echo, zap, Viper, sqlx, workers, and both Global-Singleton and Private-DI wiring. | — |
 
-### The five skills, in one breath
+### The six skills, in one breath
 
 - **`trump`** makes sure the agent never loses sight of what matters.
 - **`self-healing`** makes sure the agent gets better every time it runs.
 - **`brainstorm`** makes sure the right approach gets picked before code is written.
 - **`spec-review`** makes sure the agent does what *you* actually meant.
 - **`feature-manager`** makes sure big ideas become small, shippable tasks.
+- **`go-codebase-style`** makes sure every line of Go matches the house style.
 
 ---
 
@@ -73,7 +75,7 @@ description: >
 ---
 ```
 
-A good skill is **specific about when to fire** and **rigorous about how to behave**. The five in this repo model that.
+A good skill is **specific about when to fire** and **rigorous about how to behave**. The six in this repo model that.
 
 ---
 
@@ -108,7 +110,7 @@ Long-form thinking that backs the skills lives in [`specs/`](specs/):
 | [AI Spec – Self-Improving Agent](specs/AI%20Spec%20%E2%80%93%20Self-Improving%20Agent%20(Theory%20&%20Mechanism).md) | Full theory of the self-healing six-phase cycle. |
 | [CAPS Emphasis Agent Skill — Spec](specs/CAPS%20Emphasis%20Agent%20Skill%20%E2%80%94%20Spec.md) | Design notes for the binary-emphasis pattern. |
 | [Feature-manager](specs/Feature-manager.md) | The decomposition heuristics behind `feature-manager`. |
-| [GO_CODEBASE_STYLE](specs/GO_CODEBASE_STYLE.md) / [GUIDE](specs/GO_CODEBASE_STYLE_GUIDE.md) | Go conventions for any agent touching Go codebases. |
+| [GO_CODEBASE_STYLE](specs/GO_CODEBASE_STYLE.md) / [GUIDE](specs/GO_CODEBASE_STYLE_GUIDE.md) | Go conventions for any agent touching Go codebases — implemented by the [`go-codebase-style`](skills/go-codebase-style/SKILL.md) skill. |
 | [standard-contractions-and-informal](specs/standard-contractions-and-informal.md) | Voice rules for terse, human-feeling output. |
 
 ---
