@@ -1,0 +1,22 @@
+logger:
+  level: info
+
+http_server:
+  listen: :8080
+  read_timeout: 30s
+  write_timeout: 30s
+  read_header_timeout: 10s
+  idle_timeout: 120s
+  # When set, /api/v1 routes require a Bearer JWT signed with HS256 using this secret.
+  jwt_secret: ""
+
+database:
+  dsn: "invoice:invoice@tcp(localhost:3306)/invoices?parseTime=true&multiStatements=true"
+  max_conn: 25
+  idle_conn: 5
+  timeout: 30s
+
+worker:
+  enabled: true
+  jobs_intervals:
+    reconcile_invoices: 5m

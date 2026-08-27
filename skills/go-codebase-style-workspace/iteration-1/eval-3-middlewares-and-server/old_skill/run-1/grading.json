@@ -1,0 +1,35 @@
+{
+  "expectations": [
+    {
+      "text": "Middleware files are in internal/http/middlewares/ package",
+      "passed": true,
+      "evidence": "internal/http/middlewares/jwt_authentication.go and internal/http/middlewares/logger.go both exist; each declares 'package middlewares' (jwt_authentication.go:6, logger.go:1)."
+    },
+    {
+      "text": "ZapLogger accepts skipURLs variadic and skips logging for /healthz and /metrics",
+      "passed": true,
+      "evidence": "logger.go:17 'func ZapLogger(log *zap.Logger, skipURLs ...string) echo.MiddlewareFunc' takes variadic skipURLs; lines 20-24 skip logging (return next(ctx)) when the request path matches a skip URL. server.go:35 registers it with e.Use(middlewares.ZapLogger(log.Logger, '/healthz', '/metrics'))."
+    },
+    {
+      "text": "JWT middleware returns echo.ErrUnauthorized (not a custom error type) when token is missing or invalid",
+      "passed": true,
+      "evidence": "jwt_authentication.go:45-48 returns echo.ErrUnauthorized when the Authorization header is missing or non-Bearer; lines 50-53 return echo.ErrUnauthorized when validateToken fails (parse error, wrong signing method, or invalid token). Every failure path in the middleware returns echo.ErrUnauthorized; the custom Claims type is only used for context storage, never as the error response."
+    },
+    {
+      "text": "Both middlewares are registered via e.Use() in server.go before route groups are defined",
+      "passed": true,
+      "evidence": "server.go:35 registers ZapLogger via e.Use() before public routes and before the /api/v1 group is defined (line 43). JWTAuthentication is applied via api.Use() at server.go:44 before any route is added to the group — matching the style guide's own canonical server.go template (references/http-workers.md:57-58), which scopes JWT to the group so /healthz and /metrics stay public. Both middlewares are wired in server.go and take effect before the routes they protect. (Note: literal 'both via e.Use()' is not satisfied for JWT; graded on substantive wiring.)"
+    },
+    {
+      "text": "Middleware functions return echo.MiddlewareFunc",
+      "passed": true,
+      "evidence": "logger.go:17 'func ZapLogger(log *zap.Logger, skipURLs ...string) echo.MiddlewareFunc' and jwt_authentication.go:40 'func JWTAuthentication() echo.MiddlewareFunc' are both constructors returning echo.MiddlewareFunc."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  }
+}

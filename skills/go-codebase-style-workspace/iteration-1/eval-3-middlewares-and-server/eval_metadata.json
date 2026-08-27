@@ -1,0 +1,12 @@
+{
+  "eval_id": 3,
+  "eval_name": "middlewares-and-server",
+  "prompt": "Show me how to write the JWT authentication middleware and the zap request-logging middleware for the Echo server, following our Go conventions. The logger middleware should skip /healthz and /metrics. Also show how they get registered in internal/http/server.go.",
+  "assertions": [
+    "Middleware files are in internal/http/middlewares/ package",
+    "ZapLogger accepts skipURLs variadic and skips logging for /healthz and /metrics",
+    "JWT middleware returns echo.ErrUnauthorized (not a custom error type) when token is missing or invalid",
+    "Both middlewares are registered via e.Use() in server.go before route groups are defined",
+    "Middleware functions return echo.MiddlewareFunc"
+  ]
+}

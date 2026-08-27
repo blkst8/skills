@@ -1,0 +1,12 @@
+{
+  "eval_id": 2,
+  "eval_name": "external-notifier-service",
+  "prompt": "My Go service needs to send a Telegram welcome message whenever a new client signs up. Build it following our Go conventions: a notifier client for the Telegram Bot API, and wire the send into the client-creation flow. If Telegram is down, client creation must still succeed.",
+  "assertions": [
+    "A new package internal/service/notifier/ (package notifier) is created with an interface, a private implementation struct, and a constructor returning the interface",
+    "The notifier package does not import sqlx, repository, or any database code — it performs external HTTP I/O with a context-aware request (http.NewRequestWithContext)",
+    "The usecase implementation receives BOTH repository.Client and notifier.Notifier via its constructor and calls notifier.Send inside the create flow",
+    "A notification failure is logged (zap) and NOT returned as an error — the client-creation flow continues and returns success",
+    "The HTTP handler calls only the usecase; the handler never touches the notifier or repository directly"
+  ]
+}

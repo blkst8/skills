@@ -1,0 +1,33 @@
+logger:
+  level: info
+
+http_server:
+  listen: :8080
+  read_timeout: 30s
+  write_timeout: 30s
+  read_header_timeout: 10s
+  idle_timeout: 120s
+
+database:
+  dsn: "invoice:invoice@tcp(localhost:3306)/invoice_service?parseTime=true"
+  max_conn: 25
+  idle_conn: 5
+  timeout: 30s
+
+jwt:
+  secret: change-me-in-production
+
+notifier:
+  webhook_url: ""
+
+worker:
+  enabled: true
+  jobs_intervals:
+    reconcile_invoices: 5m
+
+workers:
+  enabled: false
+  count: 4
+  queue_size: 128
+  timeout: 2m
+  retries: 3

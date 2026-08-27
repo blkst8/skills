@@ -1,0 +1,40 @@
+{
+  "expectations": [
+    {
+      "text": "models/client.go uses both `db:` and `json:` struct tags, with a nullable field as a pointer type (e.g. UpdatedAt *time.Time)",
+      "passed": true,
+      "evidence": "internal/models/client.go:6-10 — every field carries both tags, e.g. `ID uint32 `db:\"id\" json:\"id\"`` and line 10: `UpdatedAt *time.Time `db:\"updated_at\" json:\"updated_at,omitempty\"`` (nullable as pointer type)."
+    },
+    {
+      "text": "repository/client.go defines a Client interface with Create/Get/Update/Delete accepting context.Context as first param, plus a private implementation struct and a public constructor returning the interface",
+      "passed": true,
+      "evidence": "internal/repository/client.go:16-21 — `type Client interface` with Create/Get/Update/Delete, each taking `ctx context.Context` first; lines 24-26 private `type client struct { db *sqlx.DB }`; lines 29-33 `func NewClientRepository(db *sqlx.DB) Client` returning the interface."
+    },
+    {
+      "text": "repository maps sql.ErrNoRows to a typed sentinel error (e.g. ErrClientNotFound)",
+      "passed": true,
+      "evidence": "internal/repository/client.go:13 — `var ErrClientNotFound = errors.New(\"client not found\")`; lines 56-58 in Get: `if errors.Is(err, sql.ErrNoRows) { return nil, ErrClientNotFound }`."
+    },
+    {
+      "text": "usecase/client.go defines a ClientUsecase interface, a private implementation struct, and a NewClientUsecase constructor; Create wraps repo errors with fmt.Errorf and %w",
+      "passed": true,
+      "evidence": "internal/usecase/client.go:23-28 — `type ClientUsecase interface` (Create/Get/Update/Delete); lines 31-33 private `type clientUsecase struct { repo repository.Client }`; lines 36-40 `func NewClientUsecase(repo repository.Client) ClientUsecase`; line 46 Create: `return nil, fmt.Errorf(\"failed to create client: %w\", err)`."
+    },
+    {
+      "text": "Handler files are plain functions (not methods on a struct) and call the usecase via app.A.Usecase.Client — never app.A.Service or app.A.Repository directly",
+      "passed": true,
+      "evidence": "All four handlers are plain package-level functions (`func CreateClient(ctx echo.Context) error` etc.). Grep of internal/http shows all usecase call sites go through app.A.Usecase.Client: create_client.go:31, get_client.go:22, update_client.go:33, delete_client.go:22; zero occurrences of app.A.Service or app.A.Repository in handlers."
+    },
+    {
+      "text": "Logging uses zap (log.Logger.Error / log.Logger.Info), not fmt.Println or stdlib log",
+      "passed": true,
+      "evidence": "All four handlers log via `log.Logger.Error(\"...\", zap.Error(err))` with `\"go.uber.org/zap\"` imported (e.g. create_client.go:23,33; get_client.go:24). Grep found no fmt.Println, no stdlib `log` import, and no log.Print calls in the run. (internal/log/log.go itself is not shipped; the run assumes the existing scaffold.)"
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  }
+}

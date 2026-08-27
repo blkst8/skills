@@ -1,0 +1,21 @@
+logger:
+  level: info
+
+http_server:
+  listen: :8080
+  read_timeout: 30s
+  write_timeout: 30s
+  read_header_timeout: 10s
+  idle_timeout: 120s
+
+database:
+  dsn: "user:pass@tcp(localhost:3306)/dbname?parseTime=true"
+  max_conn: 25
+  idle_conn: 5
+  timeout: 30s
+
+worker:
+  enabled: true
+  jobs_intervals:
+    sync_databases: 5m
+    cleanup_jobs: 1h

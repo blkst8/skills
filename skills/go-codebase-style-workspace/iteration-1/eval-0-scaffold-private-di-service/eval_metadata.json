@@ -1,0 +1,14 @@
+{
+  "eval_id": 0,
+  "eval_name": "scaffold-private-di-service",
+  "prompt": "I'm starting a new Go service called `invoice-service`. It needs to connect to MySQL, expose a REST API with Echo, and run a background job that reconciles invoices every 5 minutes. Use the private dependency injection pattern. Scaffold the full project layout and wire everything together in cmd/start.go.",
+  "assertions": [
+    "cmd/start.go calls WithDatabase, WithRepository, WithServices, and WithUsecases(repo, svc), then passes the usecase bundle to NewServer and the worker — no app.A access anywhere",
+    "internal/app/repository.go defines a Repository struct with a WithRepository(db *sqlx.DB) constructor",
+    "internal/app/service.go defines a Service struct that holds only external-dependency clients (no *sqlx.DB, no repositories)",
+    "internal/app/usecase.go defines a Usecase struct and a WithUsecases(repo, svc) constructor that combines repositories and services",
+    "internal/http/handlers/handlers.go defines a Handlers struct with a New constructor accepting *app.Usecase, and handler actions are methods on *Handlers",
+    "Worker job handler is a struct with the usecase bundle injected via constructor (e.g. NewReconcileInvoices(uc)), calling into the usecase layer — not repositories or services directly",
+    "No global var A or init()-based application struct in any app/ file"
+  ]
+}

@@ -2,8 +2,8 @@
 
 > A comprehensive style guide for building production-ready Go applications based on proven patterns and best practices.
 
-**Version:** 1.1  
-**Last Updated:** August 27, 2026
+**Version:** 1.0  
+**Last Updated:** December 25, 2025
 
 ---
 
@@ -41,8 +41,7 @@ project/
 │   │   ├── app.go             # Application singleton
 │   │   ├── db.go              # Database initialization
 │   │   ├── repository.go      # Repository initialization
-│   │   ├── service.go         # Service initialization
-│   │   └── usecase.go         # Usecase initialization
+│   │   └── service.go         # Service initialization
 │   ├── config/                # Configuration management
 │   │   ├── config.go          # Config structures
 │   │   └── builtin.go         # Default configurations
@@ -57,25 +56,15 @@ project/
 │   │   └── monitoring.go      # System metrics
 │   ├── models/                # Data models
 │   ├── repository/            # Data access layer
-│   ├── service/               # Clients for external dependency services — one package per role
-│   │   ├── notifier/          # e.g. external API client (Telegram, ...)
-│   │   │   └── notifier.go    # Interface + private implementation + constructor
-│   │   └── cache/             # e.g. infra-tech client wrapper
-│   │       └── cache.go
-│   ├── usecase/               # Big business logic and flows (single package)
-│   │   └── client.go          # One file per usecase/domain
-│   ├── worker/                # Interval-based background jobs (ticker)
-│   │   ├── worker.go          # Worker framework
-│   │   └── handlers/          # Job handlers
-│   └── workers/               # Worker pool (concurrent task execution)
-│       ├── pool.go            # Pool implementation
-│       └── tasks.go           # Task definitions
+│   └── worker/                # Background workers
+│       ├── worker.go          # Worker framework
+│       └── handlers/          # Job handlers
 ├── pkg/                       # Public library code
 │   └── client/                # Reusable client packages
 ├── migrations/                # Database migrations
 │   ├── YYYYMMDDHHMMSS_name.up.sql
 │   └── YYYYMMDDHHMMSS_name.down.sql
-├── docs/                       # Project documentation
+├── doc/                       # Project documentation
 │   ├── features/             # Feature specifications
 │   └── architecture/         # Architecture decision records
 ├── deployments/               # Deployment configurations
@@ -94,7 +83,6 @@ project/
 2. **`pkg/` for public libraries**: Reusable packages that can be imported
 3. **`cmd/` for executables**: Each subdirectory is a separate executable
 4. **Separation of concerns**: Clear boundaries between layers
-5. **Layer boundaries**: HTTP handlers and job/task handlers call **usecases**; usecases contain the big business logic and combine **repositories** (data access) with **services** (clients for external dependency services) — dependencies never point upward
 
 ---
 
@@ -104,11 +92,9 @@ project/
 
 ```
 ┌─────────────────────────────────────┐
-│         HTTP/CLI Layer              │  (cmd/, internal/http/, internal/worker/handlers/, internal/workers/tasks.go)
+│         HTTP/CLI Layer              │  (cmd/, internal/http/)
 ├─────────────────────────────────────┤
-│         Usecase Layer               │  (internal/usecase/) — big business logic and flows
-├─────────────────────────────────────┤
-│         Service Layer               │  (internal/service/<name>/) — clients for external dependency services
+│         Service Layer               │  (internal/app/service.go)
 ├─────────────────────────────────────┤
 │         Repository Layer            │  (internal/repository/)
 ├─────────────────────────────────────┤
@@ -120,7 +106,7 @@ project/
 
 ### Dependency Wiring Patterns
 
-The **Database**, **Repository**, **Service**, **Usecase**, and **Workers** layers support two wiring strategies. **Choose one per project** and apply it consistently.
+The **Database**, **Repository**, and **Service** layers support two wiring strategies. **Choose one per project** and apply it consistently.
 
 | | Global Singleton | Private Dependencies |
 |---|---|---|
@@ -152,7 +138,6 @@ type application struct {
     Database     *sqlx.DB
     Repository   *Repository
     Service      *Service
-    Usecase      *Usecase
 
     Ctx        context.Context
     cancelFunc context.CancelFunc
@@ -170,7 +155,6 @@ func WithGracefulShutdown() { /* ... */ }
 func WithDatabase()         { /* ... */ }
 func WithRepository()       { /* ... */ }
 func WithService()          { /* ... */ }
-func WithUsecase()          { /* ... */ }
 func Wait()                 { /* ... */ }
 ```
 
@@ -182,7 +166,6 @@ func startFunc(_ *cobra.Command, _ []string) {
     app.WithDatabase()
     app.WithRepository()
     app.WithService()
-    app.WithUsecase()
 
     srv := httpserver.NewServer()
     srv.Serve()
@@ -191,11 +174,11 @@ func startFunc(_ *cobra.Command, _ []string) {
 }
 ```
 
-**Handlers access dependencies via the global** (always through the usecase layer):
+**Handlers access dependencies via the global**:
 
 ```go
 func CreateClient(ctx echo.Context) error {
-    result, err := app.A.Usecase.Client.Create(ctx.Request().Context(), req)
+    result, err := app.A.Service.Client.Create(ctx.Request().Context(), req)
     // ...
 }
 ```
@@ -270,52 +253,28 @@ func WithRepository(db *sqlx.DB) *Repository {
 
 #### `internal/app/service.go`
 
-Services are clients for **external dependency services** only — they never receive the database or repositories.
-
 ```go
 package app
 
 import (
-    "yourproject/internal/service/notifier"
+    "github.com/jmoiron/sqlx"
+
+    "yourproject/internal/services"
 )
 
-// Service holds all clients for external dependencies (third-party APIs,
-// mail/SMS providers, message brokers, storage, ...).
+// Service holds all service instances and shared infrastructure clients
+// (db, redis, tracing, etc.) needed across the application.
 type Service struct {
-    Notifier notifier.Notifier
-    // Add other external service clients here (cache, storage, ...)
+    Client services.ClientService
+    Auth   services.AuthService
+    // Add other internal services, Redis clients, tracing providers, etc.
 }
 
-// WithServices constructs all external service clients and returns the bundle.
-func WithServices() *Service {
+// WithServices constructs all services and returns the bundle.
+func WithServices(db *sqlx.DB, repo *Repository) *Service {
     return &Service{
-        Notifier: notifier.New("bot-token-from-config"),
-    }
-}
-```
-
-#### `internal/app/usecase.go`
-
-Usecases combine **both**: repositories for data access AND services for external dependencies.
-
-```go
-package app
-
-import (
-    "yourproject/internal/usecase"
-)
-
-// Usecase holds all usecase instances. Usecases carry the big business logic;
-// they are the only layer HTTP handlers and worker/task handlers talk to.
-type Usecase struct {
-    Client usecase.ClientUsecase
-    // Add other usecases here
-}
-
-// WithUsecases constructs all usecases and returns the bundle.
-func WithUsecases(repo *Repository, svc *Service) *Usecase {
-    return &Usecase{
-        Client: usecase.NewClientUsecase(repo.Client, svc.Notifier),
+        Client: services.NewClientService(db, repo.Client),
+        Auth:   services.NewAuthService(db, repo.Client),
     }
 }
 ```
@@ -331,28 +290,17 @@ func startFunc(_ *cobra.Command, _ []string) {
     defer db.Close()
 
     repo := app.WithRepository(db)
-    svc  := app.WithServices()
-    uc   := app.WithUsecases(repo, svc)
+    svc  := app.WithServices(db, repo)
 
-    // Start interval-based workers (ticker jobs)
+    // Start workers
     if config.C.Worker.Enabled {
         syncJob := worker.NewWorker(config.C.Worker.JobsIntervals.SyncDatabases)
-        syncJob.RunAsync(workerhandlers.NewSyncDatabases(uc).Handle)
+        syncJob.RunAsync(workerhandlers.NewSyncDatabases(svc).Handle)
         defer syncJob.Close()
     }
 
-    // Start the worker pool
-    if config.C.Workers.Enabled {
-        pool := workers.NewPool(config.C.Workers)
-        pool.Start()
-        defer pool.Stop()
-        if err := pool.Submit(workers.NewSyncDatabasesTask(uc)); err != nil {
-            log.Logger.Error("failed to submit task", zap.Error(err))
-        }
-    }
-
     // Start HTTP server
-    srv := httpserver.NewServer(uc)
+    srv := httpserver.NewServer(svc)
     srv.Serve()
     defer srv.Shutdown(context.Background())
 
@@ -407,7 +355,7 @@ func CreateResource(ctx echo.Context) error {
         return err
     }
 
-    result, err := app.A.Usecase.Client.Create(ctx.Request().Context(), request)
+    result, err := app.A.Service.Client.Create(ctx.Request().Context(), request)
     if err != nil {
         log.Logger.Error("failed to create resource", zap.Error(err))
         return err
@@ -426,13 +374,13 @@ package handlers
 
 import "yourproject/internal/app"
 
-// Handlers holds the usecase bundle and exposes all handler methods.
+// Handlers holds the service bundle and exposes all handler methods.
 type Handlers struct {
-    uc *app.Usecase
+    svc *app.Service
 }
 
-func New(uc *app.Usecase) *Handlers {
-    return &Handlers{uc: uc}
+func New(svc *app.Service) *Handlers {
+    return &Handlers{svc: svc}
 }
 ```
 
@@ -466,7 +414,7 @@ func (h *Handlers) CreateResource(ctx echo.Context) error {
         return err
     }
 
-    result, err := h.uc.Client.Create(ctx.Request().Context(), request)
+    result, err := h.svc.Client.Create(ctx.Request().Context(), request)
     if err != nil {
         log.Logger.Error("failed to create resource", zap.Error(err))
         return err
@@ -525,155 +473,7 @@ func (c *client) Create(ctx context.Context, client models.Client) error {
 - Use `context.Context` as first parameter
 - Use named queries with `sqlx`
 
-#### 3. Service Package Pattern
-
-**Location**: `internal/service/<name>/`
-
-Services are **clients for external dependency services** — third-party APIs, mail/SMS providers, message brokers, storage, etc. Each service lives in its **own subpackage**, named after its **role** (`notifier`, `cache`, `storage`, `mailer`) so implementations can be swapped freely. Services never touch the database or repositories: data access is exclusively the repository layer's job.
-
-```go
-// internal/service/notifier/notifier.go
-package notifier
-
-import (
-    "bytes"
-    "context"
-    "encoding/json"
-    "fmt"
-    "net/http"
-    "time"
-)
-
-// Interface definition
-type Notifier interface {
-    Send(ctx context.Context, chatID string, msg string) error
-}
-
-// Implementation struct (private)
-type telegramNotifier struct {
-    token   string
-    baseURL string
-    http    *http.Client
-}
-
-// Constructor returns the interface
-func New(token string) Notifier {
-    return &telegramNotifier{
-        token:   token,
-        baseURL: "https://api.telegram.org",
-        http:    &http.Client{Timeout: 10 * time.Second},
-    }
-}
-
-// Methods perform pure I/O against the external dependency
-func (n *telegramNotifier) Send(ctx context.Context, chatID string, msg string) error {
-    endpoint := n.baseURL + "/bot" + n.token + "/sendMessage"
-
-    body, err := json.Marshal(map[string]string{"chat_id": chatID, "text": msg})
-    if err != nil {
-        return fmt.Errorf("failed to marshal payload: %w", err)
-    }
-
-    req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
-    if err != nil {
-        return fmt.Errorf("failed to build request: %w", err)
-    }
-    req.Header.Set("Content-Type", "application/json")
-
-    resp, err := n.http.Do(req)
-    if err != nil {
-        return fmt.Errorf("failed to send notification: %w", err)
-    }
-    defer resp.Body.Close()
-
-    if resp.StatusCode != http.StatusOK {
-        return fmt.Errorf("unexpected status from provider: %s", resp.Status)
-    }
-
-    return nil
-}
-```
-
-**Key Points**:
-- One subpackage per role under `internal/service/`: `notifier/`, `cache/`, `storage/`, ...
-- External I/O only — never import `repository`, open DB connections, or run SQL
-- Private implementation struct; constructor returns an interface (testability)
-- Wrap failures with context (`fmt.Errorf("...: %w", err)`); callers decide retry/log policy
-- Usecases consume these clients together with repositories
-
-#### 4. Usecase Package Pattern
-
-**Location**: `internal/usecase/`
-
-The usecase package contains the **big logic**: multi-step flows, cross-domain orchestration, policy decisions. HTTP handlers and worker/task handlers call usecases — not services or repositories directly. A single usecase flow can combine **repositories** (data access) and **service clients** (external dependencies) at the same time.
-
-```go
-package usecase
-
-import (
-    "context"
-    "fmt"
-
-    "go.uber.org/zap"
-
-    "yourproject/internal/log"
-    "yourproject/internal/models"
-    "yourproject/internal/repository"
-    "yourproject/internal/service/notifier"
-)
-
-// Request/response types owned by the usecase
-type CreateClientRequest struct {
-    Name       string `json:"name"`
-    Email      string `json:"email"`
-    TelegramID string `json:"telegram_id"`
-}
-
-// Interface definition
-type ClientUsecase interface {
-    Create(ctx context.Context, req CreateClientRequest) (*models.Client, error)
-}
-
-// Implementation struct (private)
-type clientUsecase struct {
-    repo     repository.Client
-    notifier notifier.Notifier
-}
-
-// Constructor
-func NewClientUsecase(repo repository.Client, notifier notifier.Notifier) ClientUsecase {
-    return &clientUsecase{
-        repo:     repo,
-        notifier: notifier,
-    }
-}
-
-// Big flow: persist via repository + call external service clients in one place
-func (u *clientUsecase) Create(ctx context.Context, req CreateClientRequest) (*models.Client, error) {
-    client := models.Client{Name: req.Name, Email: req.Email}
-    if err := u.repo.Create(ctx, client); err != nil {
-        return nil, fmt.Errorf("failed to create client: %w", err)
-    }
-
-    // External dependency used right alongside data access
-    if err := u.notifier.Send(ctx, req.TelegramID, "Welcome!"); err != nil {
-        log.Logger.Error("failed to send welcome notification", zap.Error(err))
-        // Non-fatal: continue the flow
-    }
-
-    // ...compose more repositories/service clients as the flow grows...
-
-    return &client, nil
-}
-```
-
-**Key Points**:
-- Dependency direction: handlers → **usecase** → repository / service — never upward
-- One file per usecase: `client.go`, `auth.go`
-- Keep request/response DTO types next to the usecase that owns them
-- Usecases may call repositories AND external service clients in the same flow
-
-#### 5. Models Package Pattern
+#### 3. Models Package Pattern
 
 **Location**: `internal/models/`
 
@@ -796,7 +596,7 @@ func (c *client) Get(ctx context.Context, id string) (*models.Client, error) {
 
 ```go
 func Handler(ctx echo.Context) error {
-    result, err := app.A.Usecase.Client.DoSomething()
+    result, err := app.A.Service.DoSomething()
     if err != nil {
         log.Logger.Error("operation failed", zap.Error(err))
 
@@ -815,7 +615,7 @@ func Handler(ctx echo.Context) error {
 
 ```go
 func (h *myHandler) Handle(ctx echo.Context) error {
-    result, err := h.uc.Client.DoSomething()
+    result, err := h.svc.DoSomething()
     if err != nil {
         log.Logger.Error("operation failed", zap.Error(err))
 
@@ -939,7 +739,6 @@ type Config struct {
     HTTPServer HTTPServer `yaml:"http_server"`
     Database   Database   `yaml:"database"`
     Worker     Worker     `yaml:"worker"`
-    Workers    Workers    `yaml:"workers"`
 }
 
 type Logger struct {
@@ -969,15 +768,6 @@ type Worker struct {
 type JobsIntervals struct {
     SyncDatabases time.Duration `yaml:"sync_databases"`
     CleanupJobs   time.Duration `yaml:"cleanup_jobs"`
-}
-
-// Workers configures the worker pool (internal/workers).
-type Workers struct {
-    Enabled   bool          `yaml:"enabled"`
-    Count     int           `yaml:"count"`
-    QueueSize int           `yaml:"queue_size"`
-    Timeout   time.Duration `yaml:"timeout"`
-    Retries   int           `yaml:"retries"`
 }
 
 func Load(configPath string) error {
@@ -1022,13 +812,6 @@ worker:
   jobs_intervals:
     sync_databases: 5m
     cleanup_jobs: 1h
-
-workers:
-  enabled: true
-  count: 4
-  queue_size: 128
-  timeout: 2m
-  retries: 3
 ```
 
 ### Best Practices
@@ -1199,7 +982,7 @@ func NewServer() *Server {
 }
 ```
 
-**Private Dependencies pattern** — `NewServer(uc *app.Usecase)` creates one `*handlers.Handlers` and wires all routes from it:
+**Private Dependencies pattern** — `NewServer(svc *app.Service)` creates one `*handlers.Handlers` and wires all routes from it:
 
 ```go
 package http
@@ -1224,7 +1007,7 @@ type Server struct {
     echo *echo.Echo
 }
 
-func NewServer(uc *app.Usecase) *Server {
+func NewServer(svc *app.Service) *Server {
     e := echo.New()
     e.HideBanner = true
     e.HidePort = true
@@ -1234,7 +1017,7 @@ func NewServer(uc *app.Usecase) *Server {
     e.Use(middlewares.ZapLogger(log.Logger, "/healthz", "/metrics"))
     e.Use(middleware.CORS())
 
-    h := handlers.New(uc)
+    h := handlers.New(svc)
 
     e.GET("/healthz", handlers.Healthz)
     e.GET("/metrics", handlers.Metrics)
@@ -1318,13 +1101,6 @@ func JWTAuthentication() echo.MiddlewareFunc {
 
 ## Worker/Background Jobs
 
-Two background-execution mechanisms are provided — choose per project and apply consistently:
-
-- **`internal/worker`** (ticker): runs handlers on a fixed interval — best for periodic jobs
-- **`internal/workers`** (pool): fixed goroutine pool consuming a bounded task queue with timeout/retry — best for concurrent, on-demand work
-
-Both call into the **usecase layer**, never repositories or services directly.
-
 ### Worker Framework
 
 **File**: `internal/worker/worker.go`
@@ -1401,7 +1177,7 @@ import (
 func SyncDatabases(ctx context.Context) {
     log.Logger.Info("starting database sync job")
 
-    if err := app.A.Usecase.Client.SyncDatabases(ctx); err != nil {
+    if err := app.A.Service.SyncDatabases(ctx); err != nil {
         log.Logger.Error("database sync failed", zap.Error(err))
         return
     }
@@ -1410,7 +1186,7 @@ func SyncDatabases(ctx context.Context) {
 }
 ```
 
-**Private Dependencies pattern** — handler is a struct receiving `*app.Usecase`:
+**Private Dependencies pattern** — handler is a struct receiving `*app.Service`:
 
 ```go
 // internal/worker/handlers/sync_databases.go
@@ -1425,17 +1201,17 @@ import (
 )
 
 type syncDatabases struct {
-    uc *app.Usecase
+    svc *app.Service
 }
 
-func NewSyncDatabases(uc *app.Usecase) *syncDatabases {
-    return &syncDatabases{uc: uc}
+func NewSyncDatabases(svc *app.Service) *syncDatabases {
+    return &syncDatabases{svc: svc}
 }
 
 func (h *syncDatabases) Handle(ctx context.Context) {
     log.Logger.Info("starting database sync job")
 
-    if err := h.uc.Client.SyncDatabases(ctx); err != nil {
+    if err := h.svc.SyncDatabases(ctx); err != nil {
         log.Logger.Error("database sync failed", zap.Error(err))
         return
     }
@@ -1455,23 +1231,11 @@ func startFunc(_ *cobra.Command, _ []string) {
     app.WithDatabase()
     app.WithRepository()
     app.WithService()
-    app.WithUsecase()
 
-    // Interval-based workers
     if config.C.Worker.Enabled {
         syncJob := worker.NewWorker(config.C.Worker.JobsIntervals.SyncDatabases)
         syncJob.RunAsync(handlers.SyncDatabases)
         defer syncJob.Close()
-    }
-
-    // Worker pool
-    if config.C.Workers.Enabled {
-        pool := workers.NewPool(config.C.Workers)
-        pool.Start()
-        defer pool.Stop()
-        if err := pool.Submit(workers.NewSyncDatabasesTask()); err != nil {
-            log.Logger.Error("failed to submit task", zap.Error(err))
-        }
     }
 
     app.Wait()
@@ -1479,141 +1243,6 @@ func startFunc(_ *cobra.Command, _ []string) {
 ```
 
 **Private Dependencies pattern** — see [Pattern 2: Private Dependencies](#pattern-2-private-dependencies-dependency-injection) for the full `cmd/start.go` wiring.
-
-### Worker Pool
-
-For concurrent, on-demand task execution use `internal/workers`. The pool runs a fixed number of goroutines that consume tasks from a bounded queue, applying a per-task timeout and retry count taken from the `config` package (see [Configuration Management](#configuration-management)).
-
-**File**: `internal/workers/pool.go`
-
-```go
-package workers
-
-import (
-    "context"
-    "errors"
-    "sync"
-
-    "go.uber.org/zap"
-
-    "yourproject/internal/config"
-    "yourproject/internal/log"
-)
-
-// Task is a unit of work executed by the pool.
-type Task interface {
-    Name() string
-    Execute(ctx context.Context) error
-}
-
-var ErrQueueFull = errors.New("workers queue is full")
-
-// Pool is a fixed-size worker pool with a bounded queue.
-type Pool struct {
-    cfg   config.Workers
-    tasks chan Task
-    wg    sync.WaitGroup
-}
-
-func NewPool(cfg config.Workers) *Pool {
-    return &Pool{
-        cfg:   cfg,
-        tasks: make(chan Task, cfg.QueueSize),
-    }
-}
-
-// Start launches the configured number of worker goroutines.
-func (p *Pool) Start() {
-    for i := 0; i < p.cfg.Count; i++ {
-        p.wg.Add(1)
-        go p.loop(i)
-    }
-}
-
-func (p *Pool) loop(id int) {
-    defer p.wg.Done()
-
-    for task := range p.tasks {
-        for attempt := 0; attempt <= p.cfg.Retries; attempt++ {
-            ctx, cancel := context.WithTimeout(context.Background(), p.cfg.Timeout)
-            err := task.Execute(ctx)
-            cancel()
-            if err == nil {
-                break
-            }
-            log.Logger.Error("task failed",
-                zap.Int("worker_id", id),
-                zap.String("task", task.Name()),
-                zap.Int("attempt", attempt+1),
-                zap.Error(err),
-            )
-        }
-    }
-}
-
-// Submit enqueues a task without blocking.
-// Returns ErrQueueFull when the queue has no capacity left.
-// Must not be called after Stop.
-func (p *Pool) Submit(task Task) error {
-    select {
-    case p.tasks <- task:
-        return nil
-    default:
-        log.Logger.Error("submit failed", zap.String("task", task.Name()), zap.Error(ErrQueueFull))
-        return ErrQueueFull
-    }
-}
-
-// Stop closes the queue and waits until running/pending tasks complete.
-func (p *Pool) Stop() {
-    close(p.tasks)
-    p.wg.Wait()
-}
-```
-
-**File**: `internal/workers/tasks.go` — one file per task; constructors receive the dependencies (typically the usecase bundle):
-
-```go
-package workers
-
-import (
-    "context"
-    "go.uber.org/zap"
-
-    "yourproject/internal/app"
-    "yourproject/internal/log"
-)
-
-type syncDatabasesTask struct {
-    uc *app.Usecase
-}
-
-func NewSyncDatabasesTask(uc *app.Usecase) *syncDatabasesTask {
-    return &syncDatabasesTask{uc: uc}
-}
-
-func (t *syncDatabasesTask) Name() string { return "sync_databases" }
-
-func (t *syncDatabasesTask) Execute(ctx context.Context) error {
-    log.Logger.Info("running database sync task")
-    return t.uc.Client.SyncDatabases(ctx)
-}
-```
-
-**Global Singleton pattern** — the task reads `app.A` directly instead:
-
-```go
-func (t *syncDatabasesTask) Execute(ctx context.Context) error {
-    return app.A.Usecase.Client.SyncDatabases(ctx)
-}
-```
-
-**Key Points**:
-- All sizing knobs come from `config.C.Workers` (`enabled`, `count`, `queue_size`, `timeout`, `retries`)
-- Tasks implement the `Task` interface — one small type per job, named by its action
-- Tasks call **usecases**, never repositories or services directly
-- `Submit` is non-blocking: a full queue returns `ErrQueueFull` so callers can decide to drop or back off
-- `Stop()` drains the queue gracefully; pair it with a context timeout in `startFunc`
 
 ---
 
@@ -1932,11 +1561,8 @@ MIT License
 - [ ] Create application singleton pattern
 - [ ] Set up database connection and migrations
 - [ ] Implement repository layer with interfaces
-- [ ] Create service package for domain services
-- [ ] Create usecase package for big business logic (handlers → usecase → service)
 - [ ] Create HTTP server with middleware
 - [ ] Add graceful shutdown handling
-- [ ] Implement worker pool (`internal/workers`) with config-driven settings
 - [ ] Set up metrics and monitoring
 - [ ] Create Makefile for common tasks
 - [ ] Write README with setup instructions

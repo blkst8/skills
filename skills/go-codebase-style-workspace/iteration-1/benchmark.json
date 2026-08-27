@@ -1,0 +1,448 @@
+{
+  "metadata": {
+    "skill_name": "go-codebase-style",
+    "skill_path": "/home/blkst8/src/github/blkst8/skills/skills/go-codebase-style",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-08-27T15:47:41Z",
+    "evals_run": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": 0,
+      "configuration": "old_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.29,
+        "passed": 2,
+        "failed": 5,
+        "total": 7,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "cmd/start.go calls WithDatabase, WithRepository, WithServices, and WithUsecases(repo, svc), then passes the usecase bundle to NewServer and the worker \u2014 no app.A access anywhere",
+          "passed": false,
+          "evidence": "cmd/start.go:50-54 calls app.WithDatabase(), app.WithRepository(db) and app.WithServices(db, repo) but there is no WithUsecases call or usecase bundle anywhere in the run (no WithUsecases symbol exists in the codebase). Lines 58 and 62 pass the Service bundle: workerhandlers.NewReconcileInvoices(svc) and httpserver.NewServer(svc). The 'no app.A access' clause itself holds, but the required WithUsecases wiring is absent. ARCHITECTURE DIFFERENCE: run has no usecase layer at all."
+        },
+        {
+          "text": "internal/app/repository.go defines a Repository struct with a WithRepository(db *sqlx.DB) constructor",
+          "passed": true,
+          "evidence": "internal/app/repository.go:10-18: 'type Repository struct { Invoice repository.Invoice }' and 'func WithRepository(db *sqlx.DB) *Repository' returning &Repository{Invoice: repository.NewInvoiceRepository(db)}."
+        },
+        {
+          "text": "internal/app/service.go defines a Service struct that holds only external-dependency clients (no *sqlx.DB, no repositories)",
+          "passed": false,
+          "evidence": "internal/app/service.go:16-18: 'func WithServices(db *sqlx.DB, repo *Repository) *Service' \u2014 the Service bundle is constructed from the DB and the repository bundle. Its only member is services.InvoiceService, whose concrete type (internal/services/invoice.go:41-50) holds 'db *sqlx.DB; repo repository.Invoice'. So the held service is DB/repository-backed business logic, not an external-dependency client. ARCHITECTURE DIFFERENCE: the run places business logic in a DB-backed service layer instead of a pure external-clients Service layer plus a usecase layer."
+        },
+        {
+          "text": "internal/app/usecase.go defines a Usecase struct and a WithUsecases(repo, svc) constructor that combines repositories and services",
+          "passed": false,
+          "evidence": "internal/app/usecase.go does not exist (app/ contains only app.go, db.go, repository.go, service.go) and no Usecase type or WithUsecases constructor exists anywhere in the run (grep for 'usecase' matched nothing except a summary.md mention)."
+        },
+        {
+          "text": "internal/http/handlers/handlers.go defines a Handlers struct with a New constructor accepting *app.Usecase, and handler actions are methods on *Handlers",
+          "passed": false,
+          "evidence": "internal/http/handlers/handlers.go:10-16 defines 'type Handlers struct { svc *app.Service }' with 'func New(svc *app.Service) *Handlers' \u2014 it accepts *app.Service, not *app.Usecase (which does not exist in this run). ARCHITECTURE DIFFERENCE: handlers are wired to the service bundle because there is no usecase layer. The actions-are-methods-on-*Handlers part does hold (e.g. create_invoice.go, get_invoice.go, list_invoices.go)."
+        },
+        {
+          "text": "Worker job handler is a struct with the usecase bundle injected via constructor (e.g. NewReconcileInvoices(uc)), calling into the usecase layer \u2014 not repositories or services directly",
+          "passed": false,
+          "evidence": "internal/worker/handlers/reconcile_invoices.go:16-23: 'type reconcileInvoices struct { svc *app.Service }' with 'func NewReconcileInvoices(svc *app.Service)'. Handle() calls h.svc.Invoice.Reconcile(ctx) (line 29) \u2014 it calls into the service layer, not a usecase layer (none exists). ARCHITECTURE DIFFERENCE: the struct-with-constructor pattern is followed, but the injected dependency is the service bundle rather than the usecase bundle the assertion requires."
+        },
+        {
+          "text": "No global var A or init()-based application struct in any app/ file",
+          "passed": true,
+          "evidence": "Grep for 'func init(' / 'var A' / 'app.A' across internal/app/ returned zero matches; internal/app/app.go only declares ldflags build-info vars (GitCommit, GitTag, BuildDate) and a Banner() helper. The only init() in the run is cmd/start.go:33 registering the cobra command, outside app/."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "old_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.67,
+        "passed": 4,
+        "failed": 2,
+        "total": 6,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "models/client.go uses both `db:` and `json:` struct tags, with a nullable field as a pointer type (e.g. UpdatedAt *time.Time)",
+          "passed": true,
+          "evidence": "internal/models/client.go:12-16 \u2014 every field carries both tags, e.g. `ID uint32 `db:\"id\" json:\"id\"`` and line 16: `UpdatedAt *time.Time `db:\"updated_at\" json:\"updated_at,omitempty\"`` (nullable as pointer type)."
+        },
+        {
+          "text": "repository/client.go defines a Client interface with Create/Get/Update/Delete accepting context.Context as first param, plus a private implementation struct and a public constructor returning the interface",
+          "passed": true,
+          "evidence": "internal/repository/client.go:28-33 \u2014 `type Client interface` with Create/Get/Update/Delete, each taking `ctx context.Context` first; lines 36-38 private `type client struct { db *sqlx.DB }`; lines 41-45 `func NewClientRepository(db *sqlx.DB) Client` returning the interface."
+        },
+        {
+          "text": "repository maps sql.ErrNoRows to a typed sentinel error (e.g. ErrClientNotFound)",
+          "passed": true,
+          "evidence": "internal/repository/client.go:21 \u2014 `ErrClientNotFound = errors.New(\"client not found\")`; lines 74-76 in Get: `if errors.Is(err, sql.ErrNoRows) { return nil, ErrClientNotFound }` (plus RowsAffected==0 mapping for Update/Delete)."
+        },
+        {
+          "text": "usecase/client.go defines a ClientUsecase interface, a private implementation struct, and a NewClientUsecase constructor; Create wraps repo errors with fmt.Errorf and %w",
+          "passed": false,
+          "evidence": "internal/usecase/client.go defines the interface as `type Client interface` (line 31), i.e. usecase.Client \u2014 no type named ClientUsecase exists anywhere in the file. The private struct `clientUsecase` (line 39), constructor `NewClientUsecase` (line 44), and Create's `fmt.Errorf(\"failed to create client: %w\", err)` (line 70) do match, but the literal `ClientUsecase` interface requirement is unmet \u2014 consistent with the run following the old Service-style naming throughout."
+        },
+        {
+          "text": "Handler files are plain functions (not methods on a struct) and call the usecase via app.A.Usecase.Client \u2014 never app.A.Service or app.A.Repository directly",
+          "passed": false,
+          "evidence": "Handlers ARE plain functions, but every usecase call site goes through app.A.Service.Client \u2014 create_client.go:50, get_client.go:25, update_client.go:49 and 64, delete_client.go:25. There is no internal/app/usecase.go and `app.A.Usecase` appears nowhere; the usecase is wired into the Service bundle (internal/app/service.go:10,17-18: `Client usecase.Client`, `A.Service = &Service{...}`), violating the required app.A.Usecase.Client access path."
+        },
+        {
+          "text": "Logging uses zap (log.Logger.Error / log.Logger.Info), not fmt.Println or stdlib log",
+          "passed": true,
+          "evidence": "Handlers log via `log.Logger.Error(\"...\", zap.Error(err))` (e.g. create_client.go:46,55; get_client.go:27); usecase logs `log.Logger.Info(\"client created\", zap.Uint32(\"id\", id))` (usecase/client.go:73); internal/log/log.go builds a `*zap.Logger`. Grep found no fmt.Println and no stdlib log usage \u2014 the only textual match for those tokens is a comment in log.go:3."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "old_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.4,
+        "passed": 2,
+        "failed": 3,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "A new package internal/service/notifier/ (package notifier) is created with an interface, a private implementation struct, and a constructor returning the interface",
+          "passed": false,
+          "evidence": "The notifier is created at internal/services/notifier/ (plural 'services'), not the required internal/service/notifier/ \u2014 internal/services/notifier/notifier.go has `package notifier` with a `Notifier` interface (line 19), private `telegram` impl struct (telegram.go line 29), and `New(cfg config.Telegram) Notifier` returning the interface (lines 28-34), so the content pattern is present but the v1.1-required singular 'service' path internal/service/notifier/ does not exist anywhere in the run. summary.md lines 60-62 explicitly acknowledge the deviation: 'placed in internal/services/notifier per the guide's internal/services convention rather than the illustrative internal/service|usecase paths'."
+        },
+        {
+          "text": "The notifier package does not import sqlx, repository, or any database code \u2014 it performs external HTTP I/O with a context-aware request (http.NewRequestWithContext)",
+          "passed": true,
+          "evidence": "internal/services/notifier/notifier.go imports only context and internal/config; telegram.go imports bytes, context, encoding/json, fmt, io, net/http, strings, time and internal/config \u2014 no sqlx/repository/database code. telegram.go line 75: `req, err := http.NewRequestWithContext(ctx, http.MethodPost, apiURL, bytes.NewReader(payload))` posting to the Telegram Bot API sendMessage endpoint, with transport error, body-read, and API 'ok': false handling (lines 81-99)."
+        },
+        {
+          "text": "The usecase implementation receives BOTH repository.Client and notifier.Notifier via its constructor and calls notifier.Send inside the create flow",
+          "passed": false,
+          "evidence": "There is no internal/usecase/ layer anywhere in this run \u2014 the business logic lives in internal/services/client.go as a `ClientService` (architectural difference: old-skill layout wires deps into a service consumed directly by handlers instead of a usecase). The closest analog, `NewClientService(clients repository.Client, notifier notifier.Notifier)` (internal/services/client.go line 45), does receive both deps, but it is not a usecase and it calls `c.notifier.SendMessage` (line 93), not `notifier.Send`."
+        },
+        {
+          "text": "A notification failure is logged (zap) and NOT returned as an error \u2014 the client-creation flow continues and returns success",
+          "passed": true,
+          "evidence": "internal/services/client.go: `sendWelcomeMessage` (lines 87-99) logs `log.Logger.Error(\"failed to send telegram welcome message\", zap.Error(err), zap.Uint32(\"client_id\", ...), zap.String(\"telegram_id\", ...))` and returns nothing; `Create` (lines 59-73) calls it after the DB insert and returns `&client, nil`, so notifier failure never propagates. Doc comment lines 55-58: 'the error is logged and client creation still succeeds'. Verified by running `go test ./...`: subtest 'telegram down does not fail creation' in internal/services/client_test.go passes. (Note: this behavior lives in the service layer, not a usecase \u2014 the layer-agnostic behavioral assertion is satisfied.)"
+        },
+        {
+          "text": "The HTTP handler calls only the usecase; the handler never touches the notifier or repository directly",
+          "passed": false,
+          "evidence": "There is no usecase layer to call: internal/http/handlers/create_client.go line 51 calls `h.svc.Client.Create(...)` \u2014 a `services.ClientService` (import `internal/services`, line 10) \u2014 and get_client.go line 33 calls `h.svc.Client.Get`, so handlers are wired to the service bundle, not a usecase. To its credit, no handler calls notifier or repository methods directly (the only `repository` reference is the sentinel `repository.ErrClientNotFound` mapping in get_client.go line 37), but the assertion's core requirement \u2014 handler delegates to a usecase \u2014 is unmet because the run's architecture omits the usecase layer entirely."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "old_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Middleware files are in internal/http/middlewares/ package",
+          "passed": true,
+          "evidence": "internal/http/middlewares/jwt_authentication.go and internal/http/middlewares/logger.go both exist; each declares 'package middlewares' (jwt_authentication.go:6, logger.go:1)."
+        },
+        {
+          "text": "ZapLogger accepts skipURLs variadic and skips logging for /healthz and /metrics",
+          "passed": true,
+          "evidence": "logger.go:17 'func ZapLogger(log *zap.Logger, skipURLs ...string) echo.MiddlewareFunc' takes variadic skipURLs; lines 20-24 skip logging (return next(ctx)) when the request path matches a skip URL. server.go:35 registers it with e.Use(middlewares.ZapLogger(log.Logger, '/healthz', '/metrics'))."
+        },
+        {
+          "text": "JWT middleware returns echo.ErrUnauthorized (not a custom error type) when token is missing or invalid",
+          "passed": true,
+          "evidence": "jwt_authentication.go:45-48 returns echo.ErrUnauthorized when the Authorization header is missing or non-Bearer; lines 50-53 return echo.ErrUnauthorized when validateToken fails (parse error, wrong signing method, or invalid token). Every failure path in the middleware returns echo.ErrUnauthorized; the custom Claims type is only used for context storage, never as the error response."
+        },
+        {
+          "text": "Both middlewares are registered via e.Use() in server.go before route groups are defined",
+          "passed": true,
+          "evidence": "server.go:35 registers ZapLogger via e.Use() before public routes and before the /api/v1 group is defined (line 43). JWTAuthentication is applied via api.Use() at server.go:44 before any route is added to the group \u2014 matching the style guide's own canonical server.go template (references/http-workers.md:57-58), which scopes JWT to the group so /healthz and /metrics stay public. Both middlewares are wired in server.go and take effect before the routes they protect. (Note: literal 'both via e.Use()' is not satisfied for JWT; graded on substantive wiring.)"
+        },
+        {
+          "text": "Middleware functions return echo.MiddlewareFunc",
+          "passed": true,
+          "evidence": "logger.go:17 'func ZapLogger(log *zap.Logger, skipURLs ...string) echo.MiddlewareFunc' and jwt_authentication.go:40 'func JWTAuthentication() echo.MiddlewareFunc' are both constructors returning echo.MiddlewareFunc."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 0,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "cmd/start.go calls WithDatabase, WithRepository, WithServices, and WithUsecases(repo, svc), then passes the usecase bundle to NewServer and the worker \u2014 no app.A access anywhere",
+          "passed": true,
+          "evidence": "cmd/start.go:39-44 chains db := app.WithDatabase(), repo := app.WithRepository(db), svc := app.WithServices(), uc := app.WithUsecases(repo, svc). The uc bundle is passed to workerhandlers.NewReconcileInvoices(uc) (line 49), workers.NewReconcileInvoicesTask(uc) (line 58) and httpserver.NewServer(uc) (line 63). Repo-wide grep found no 'app.A' identifier anywhere."
+        },
+        {
+          "text": "internal/app/repository.go defines a Repository struct with a WithRepository(db *sqlx.DB) constructor",
+          "passed": true,
+          "evidence": "internal/app/repository.go:10-19: 'type Repository struct { Invoice repository.Invoice }' and 'func WithRepository(db *sqlx.DB) *Repository' returning &Repository{Invoice: repository.NewInvoiceRepository(db)}."
+        },
+        {
+          "text": "internal/app/service.go defines a Service struct that holds only external-dependency clients (no *sqlx.DB, no repositories)",
+          "passed": true,
+          "evidence": "internal/app/service.go:11-20: 'type Service struct { Notifier notifier.Notifier }' \u2014 only an external webhook client; WithServices() takes no arguments (no db, no repo). Comment explicitly states 'Services never receive the database or repositories.' The DB-backed business logic lives in internal/usecase/invoice.go instead."
+        },
+        {
+          "text": "internal/app/usecase.go defines a Usecase struct and a WithUsecases(repo, svc) constructor that combines repositories and services",
+          "passed": true,
+          "evidence": "internal/app/usecase.go:9-19: 'type Usecase struct { Invoice usecase.InvoiceUsecase }' and 'func WithUsecases(repo *Repository, svc *Service) *Usecase' returning usecase.NewInvoiceUsecase(repo.Invoice, svc.Notifier), combining both bundles."
+        },
+        {
+          "text": "internal/http/handlers/handlers.go defines a Handlers struct with a New constructor accepting *app.Usecase, and handler actions are methods on *Handlers",
+          "passed": true,
+          "evidence": "internal/http/handlers/handlers.go:16-22: 'type Handlers struct { uc *app.Usecase }' and 'func New(uc *app.Usecase) *Handlers'. Business actions are methods on *Handlers: CreateInvoice (create_invoice.go:26), GetInvoice (get_invoice.go:19), ListInvoices (list_invoices.go:15); each calls h.uc.Invoice.* (e.g. create_invoice.go:37 calls h.uc.Invoice.Create). Note: dependency-free infra endpoints Healthz (healthz.go:10) and Metrics (metrics.go:10) remain package-level functions, which is acceptable since they need no dependencies."
+        },
+        {
+          "text": "Worker job handler is a struct with the usecase bundle injected via constructor (e.g. NewReconcileInvoices(uc)), calling into the usecase layer \u2014 not repositories or services directly",
+          "passed": true,
+          "evidence": "internal/worker/handlers/reconcile_invoices.go:13-19: 'type reconcileInvoices struct { uc *app.Usecase }' with 'func NewReconcileInvoices(uc *app.Usecase)'. Handle() calls h.uc.Invoice.Reconcile(ctx) (line 25) \u2014 usecase layer only, no repo/service imports. The pool variant internal/workers/tasks.go:10-22 follows the same pattern."
+        },
+        {
+          "text": "No global var A or init()-based application struct in any app/ file",
+          "passed": true,
+          "evidence": "Grep for 'func init(' / 'var A' / 'app.A' across internal/app/ returned zero matches; internal/app/app.go only declares ldflags build-info vars (GitCommit, GitTag, etc.) and a Banner() helper. The init() functions that do exist elsewhere (cmd/root.go:37, internal/log/log.go:15, internal/metrics/business.go:27) are cobra/logging/metrics setup, not an application struct."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "models/client.go uses both `db:` and `json:` struct tags, with a nullable field as a pointer type (e.g. UpdatedAt *time.Time)",
+          "passed": true,
+          "evidence": "internal/models/client.go:6-10 \u2014 every field carries both tags, e.g. `ID uint32 `db:\"id\" json:\"id\"`` and line 10: `UpdatedAt *time.Time `db:\"updated_at\" json:\"updated_at,omitempty\"`` (nullable as pointer type)."
+        },
+        {
+          "text": "repository/client.go defines a Client interface with Create/Get/Update/Delete accepting context.Context as first param, plus a private implementation struct and a public constructor returning the interface",
+          "passed": true,
+          "evidence": "internal/repository/client.go:16-21 \u2014 `type Client interface` with Create/Get/Update/Delete, each taking `ctx context.Context` first; lines 24-26 private `type client struct { db *sqlx.DB }`; lines 29-33 `func NewClientRepository(db *sqlx.DB) Client` returning the interface."
+        },
+        {
+          "text": "repository maps sql.ErrNoRows to a typed sentinel error (e.g. ErrClientNotFound)",
+          "passed": true,
+          "evidence": "internal/repository/client.go:13 \u2014 `var ErrClientNotFound = errors.New(\"client not found\")`; lines 56-58 in Get: `if errors.Is(err, sql.ErrNoRows) { return nil, ErrClientNotFound }`."
+        },
+        {
+          "text": "usecase/client.go defines a ClientUsecase interface, a private implementation struct, and a NewClientUsecase constructor; Create wraps repo errors with fmt.Errorf and %w",
+          "passed": true,
+          "evidence": "internal/usecase/client.go:23-28 \u2014 `type ClientUsecase interface` (Create/Get/Update/Delete); lines 31-33 private `type clientUsecase struct { repo repository.Client }`; lines 36-40 `func NewClientUsecase(repo repository.Client) ClientUsecase`; line 46 Create: `return nil, fmt.Errorf(\"failed to create client: %w\", err)`."
+        },
+        {
+          "text": "Handler files are plain functions (not methods on a struct) and call the usecase via app.A.Usecase.Client \u2014 never app.A.Service or app.A.Repository directly",
+          "passed": true,
+          "evidence": "All four handlers are plain package-level functions (`func CreateClient(ctx echo.Context) error` etc.). Grep of internal/http shows all usecase call sites go through app.A.Usecase.Client: create_client.go:31, get_client.go:22, update_client.go:33, delete_client.go:22; zero occurrences of app.A.Service or app.A.Repository in handlers."
+        },
+        {
+          "text": "Logging uses zap (log.Logger.Error / log.Logger.Info), not fmt.Println or stdlib log",
+          "passed": true,
+          "evidence": "All four handlers log via `log.Logger.Error(\"...\", zap.Error(err))` with `\"go.uber.org/zap\"` imported (e.g. create_client.go:23,33; get_client.go:24). Grep found no fmt.Println, no stdlib `log` import, and no log.Print calls in the run. (internal/log/log.go itself is not shipped; the run assumes the existing scaffold.)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "A new package internal/service/notifier/ (package notifier) is created with an interface, a private implementation struct, and a constructor returning the interface",
+          "passed": true,
+          "evidence": "internal/service/notifier/notifier.go: `package notifier` (line 6), `type Notifier interface { Send(...) }` (line 18), private `telegramNotifier` struct (line 23), and `func New(token string) Notifier` returning the interface (lines 30-36). Package compiles (`go build ./...` passes) and has its own test file notifier_test.go."
+        },
+        {
+          "text": "The notifier package does not import sqlx, repository, or any database code \u2014 it performs external HTTP I/O with a context-aware request (http.NewRequestWithContext)",
+          "passed": true,
+          "evidence": "internal/service/notifier/notifier.go imports only bytes, context, encoding/json, fmt, net/http, time (lines 8-15) \u2014 no sqlx/repository/db code. Line 48: `req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))` posting to the Telegram sendMessage endpoint, then `n.http.Do(req)` and status check (lines 54-62). Doc comment lines 4-5 explicitly state it 'never touches repositories, opens database connections, or runs SQL'."
+        },
+        {
+          "text": "The usecase implementation receives BOTH repository.Client and notifier.Notifier via its constructor and calls notifier.Send inside the create flow",
+          "passed": true,
+          "evidence": "internal/usecase/client.go line 38: `func NewClientUsecase(repo repository.Client, notifier notifier.Notifier) ClientUsecase` (struct fields lines 33-34). Inside `Create` (line 50), line 61 calls `u.notifier.Send(ctx, req.TelegramID, msg)` after `u.repo.Create` (line 53). Wiring in internal/app/usecase.go line 17: `usecase.NewClientUsecase(repo.Client, svc.Notifier)` injects both."
+        },
+        {
+          "text": "A notification failure is logged (zap) and NOT returned as an error \u2014 the client-creation flow continues and returns success",
+          "passed": true,
+          "evidence": "internal/usecase/client.go lines 61-68: on `u.notifier.Send` error it logs `log.Logger.Error(\"failed to send welcome notification\", zap.Error(err), zap.Uint32(\"client_id\", ...), ...)` with comment '// Non-fatal: continue the flow.' and does not return; line 71 returns `&client, nil`. Doc comment lines 47-49: 'when the notifier fails (e.g. Telegram is down) the error is logged and the flow continues'. Verified by running `go test ./...`: subtest 'succeeds even when telegram is down' in internal/usecase/client_test.go passes."
+        },
+        {
+          "text": "The HTTP handler calls only the usecase; the handler never touches the notifier or repository directly",
+          "passed": true,
+          "evidence": "internal/http/handlers/create_client.go line 46: `h.uc.Client.Create(...)` with only import `internal/usecase` (line 10); get_client.go line 25: `h.uc.Client.Get(...)`; handlers.go struct holds `*app.Usecase` (lines 13-15). No handler ever calls a notifier or repository method \u2014 the sole `repository` reference is the sentinel error mapping `errors.Is(err, repository.ErrClientNotFound)` in get_client.go line 29 (an import of the sentinel constant for 404 mapping, not a repository call)."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Middleware files are in internal/http/middlewares/ package",
+          "passed": true,
+          "evidence": "internal/http/middlewares/jwt_authentication.go and internal/http/middlewares/logger.go both exist; each declares 'package middlewares' at line 1."
+        },
+        {
+          "text": "ZapLogger accepts skipURLs variadic and skips logging for /healthz and /metrics",
+          "passed": true,
+          "evidence": "logger.go:14 'func ZapLogger(log *zap.Logger, skipURLs ...string) echo.MiddlewareFunc' takes variadic skipURLs; lines 15-18 build a skip set and lines 22-24 return next(ctx) without logging for skipped paths. server.go:33 registers it with e.Use(middlewares.ZapLogger(log.Logger, '/healthz', '/metrics'))."
+        },
+        {
+          "text": "JWT middleware returns echo.ErrUnauthorized (not a custom error type) when token is missing or invalid",
+          "passed": true,
+          "evidence": "jwt_authentication.go:20-22 returns echo.ErrUnauthorized when the Authorization header is empty; lines 24-27 return echo.ErrUnauthorized when validateToken fails (parse error or invalid token). Every failure path returns echo.ErrUnauthorized; no custom error type is returned to the client."
+        },
+        {
+          "text": "Both middlewares are registered via e.Use() in server.go before route groups are defined",
+          "passed": true,
+          "evidence": "server.go:33 registers ZapLogger via e.Use() before public routes and before the /api/v1 group is defined (line 41). JWTAuthentication is applied via api.Use() at server.go:42 before any route is added to the group \u2014 matching the style guide's own canonical server.go template (references/http-workers.md:57-58), which scopes JWT to the group so /healthz and /metrics stay public. Both middlewares are wired in server.go and take effect before the routes they protect. (Note: literal 'both via e.Use()' is not satisfied for JWT; graded on substantive wiring.)"
+        },
+        {
+          "text": "Middleware functions return echo.MiddlewareFunc",
+          "passed": true,
+          "evidence": "logger.go:14 'func ZapLogger(log *zap.Logger, skipURLs ...string) echo.MiddlewareFunc' and jwt_authentication.go:15 'func JWTAuthentication(secret string) echo.MiddlewareFunc' are both constructors returning echo.MiddlewareFunc."
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "old_skill": {
+      "pass_rate": {
+        "mean": 0.59,
+        "stddev": 0.3165,
+        "min": 0.29,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "tokens": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "tokens": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "delta": {
+      "pass_rate": "-0.41",
+      "time_seconds": "+0.0",
+      "tokens": "+0"
+    }
+  },
+  "notes": [
+    "All 7 old-skill failures across evals 0-2 share ONE root cause: the v1.0 guide lacks the service/usecase layer split (services were DB-backed business logic wired straight into handlers). The new skill fixes exactly this.",
+    "Eval 0 (full scaffold) is the strongest discriminator: 100% vs 29% \u2014 old skill stopped at Repository/Service bundles with no internal/app/usecase.go.",
+    "Eval 3 (middlewares) is non-discriminating (100% both): that area of the spec did not change between v1.0 and v1.1.",
+    "Old-skill runs were NOT bad code \u2014 they produced clean, compiling services; they simply followed the outdated architecture. This confirms the skill (not general capability) drove the difference.",
+    "Timing/token metrics unavailable this iteration: subagent completion notifications did not report total_tokens/duration_ms, so time/token comparisons are 0.",
+    "Eval-improvement notes from graders: (1) 'handler actions are methods on *Handlers' is overbroad since Healthz/Metrics stay package-level functions; (2) eval-3 assertion 'both registered via e.Use()' contradicts the guide's own api.Use() group scoping for JWT; (3) no assertion checks that the generated slice compiles on its own.",
+    "Baseline agents hit the skill's 'ask which wiring pattern' step in non-interactive runs and defaulted sensibly to Private DI; the new skill could state that fallback explicitly."
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "expectations": [
+    {
+      "text": "A new package internal/service/notifier/ (package notifier) is created with an interface, a private implementation struct, and a constructor returning the interface",
+      "passed": true,
+      "evidence": "internal/service/notifier/notifier.go: `package notifier` (line 6), `type Notifier interface { Send(...) }` (line 18), private `telegramNotifier` struct (line 23), and `func New(token string) Notifier` returning the interface (lines 30-36). Package compiles (`go build ./...` passes) and has its own test file notifier_test.go."
+    },
+    {
+      "text": "The notifier package does not import sqlx, repository, or any database code — it performs external HTTP I/O with a context-aware request (http.NewRequestWithContext)",
+      "passed": true,
+      "evidence": "internal/service/notifier/notifier.go imports only bytes, context, encoding/json, fmt, net/http, time (lines 8-15) — no sqlx/repository/db code. Line 48: `req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))` posting to the Telegram sendMessage endpoint, then `n.http.Do(req)` and status check (lines 54-62). Doc comment lines 4-5 explicitly state it 'never touches repositories, opens database connections, or runs SQL'."
+    },
+    {
+      "text": "The usecase implementation receives BOTH repository.Client and notifier.Notifier via its constructor and calls notifier.Send inside the create flow",
+      "passed": true,
+      "evidence": "internal/usecase/client.go line 38: `func NewClientUsecase(repo repository.Client, notifier notifier.Notifier) ClientUsecase` (struct fields lines 33-34). Inside `Create` (line 50), line 61 calls `u.notifier.Send(ctx, req.TelegramID, msg)` after `u.repo.Create` (line 53). Wiring in internal/app/usecase.go line 17: `usecase.NewClientUsecase(repo.Client, svc.Notifier)` injects both."
+    },
+    {
+      "text": "A notification failure is logged (zap) and NOT returned as an error — the client-creation flow continues and returns success",
+      "passed": true,
+      "evidence": "internal/usecase/client.go lines 61-68: on `u.notifier.Send` error it logs `log.Logger.Error(\"failed to send welcome notification\", zap.Error(err), zap.Uint32(\"client_id\", ...), ...)` with comment '// Non-fatal: continue the flow.' and does not return; line 71 returns `&client, nil`. Doc comment lines 47-49: 'when the notifier fails (e.g. Telegram is down) the error is logged and the flow continues'. Verified by running `go test ./...`: subtest 'succeeds even when telegram is down' in internal/usecase/client_test.go passes."
+    },
+    {
+      "text": "The HTTP handler calls only the usecase; the handler never touches the notifier or repository directly",
+      "passed": true,
+      "evidence": "internal/http/handlers/create_client.go line 46: `h.uc.Client.Create(...)` with only import `internal/usecase` (line 10); get_client.go line 25: `h.uc.Client.Get(...)`; handlers.go struct holds `*app.Usecase` (lines 13-15). No handler ever calls a notifier or repository method — the sole `repository` reference is the sentinel error mapping `errors.Is(err, repository.ErrClientNotFound)` in get_client.go line 29 (an import of the sentinel constant for 404 mapping, not a repository call)."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  }
+}

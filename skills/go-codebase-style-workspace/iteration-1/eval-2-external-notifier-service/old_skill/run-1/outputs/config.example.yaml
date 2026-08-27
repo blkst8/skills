@@ -1,0 +1,25 @@
+logger:
+  level: info
+
+http_server:
+  listen: :8080
+  read_timeout: 30s
+  write_timeout: 30s
+  read_header_timeout: 10s
+  idle_timeout: 120s
+
+database:
+  dsn: "user:pass@tcp(localhost:3306)/clients?parseTime=true"
+  max_conn: 25
+  idle_conn: 5
+  timeout: 30s
+
+# Telegram Bot API notifier. Get the bot token from @BotFather and never
+# commit the real value — override it in environment-specific config files.
+# When enabled is false a no-op notifier is wired and no messages are sent.
+# timeout bounds every API call so a Telegram outage cannot hang requests.
+telegram:
+  enabled: true
+  bot_token: "123456789:REPLACE_WITH_YOUR_BOT_TOKEN"
+  api_base_url: "https://api.telegram.org"
+  timeout: 5s

@@ -1,0 +1,6 @@
+# Local config contains secrets — never commit it (use config.example.yaml)
+config.yaml
+
+# Build artifacts
+invoice-service
+coverage.out

@@ -1,0 +1,13 @@
+{
+  "eval_id": 1,
+  "eval_name": "add-domain-global-singleton",
+  "prompt": "Add a `client` domain to my existing Go service. I need: a Client model, a ClientRepository interface with Create/Get/Update/Delete methods and its sqlx implementation, a ClientUsecase with a Create flow, and four Echo HTTP handlers. Use the global singleton pattern (app.A). Follow the project style guide.",
+  "assertions": [
+    "models/client.go uses both `db:` and `json:` struct tags, with a nullable field as a pointer type (e.g. UpdatedAt *time.Time)",
+    "repository/client.go defines a Client interface with Create/Get/Update/Delete accepting context.Context as first param, plus a private implementation struct and a public constructor returning the interface",
+    "repository maps sql.ErrNoRows to a typed sentinel error (e.g. ErrClientNotFound)",
+    "usecase/client.go defines a ClientUsecase interface, a private implementation struct, and a NewClientUsecase constructor; Create wraps repo errors with fmt.Errorf and %w",
+    "Handler files are plain functions (not methods on a struct) and call the usecase via app.A.Usecase.Client — never app.A.Service or app.A.Repository directly",
+    "Logging uses zap (log.Logger.Error / log.Logger.Info), not fmt.Println or stdlib log"
+  ]
+}

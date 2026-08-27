@@ -1,0 +1,47 @@
+{
+  "skill_name": "go-codebase-style",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I'm starting a new Go service called `invoice-service`. It needs to connect to MySQL, expose a REST API with Echo, and run a background job that reconciles invoices every 5 minutes. Use the private dependency injection pattern. Scaffold the full project layout and wire everything together in cmd/start.go.",
+      "expected_output": "A complete project skeleton: correct directory layout (cmd/, internal/app/, internal/http/, internal/worker/, internal/repository/, internal/models/, migrations/, etc.), app/db.go returning *sqlx.DB, app/repository.go with Repository struct + WithRepository, app/service.go with Service struct + WithServices, handlers/handlers.go with Handlers struct + New, cmd/start.go wiring db→repo→svc→server and worker. No global app.A usage anywhere.",
+      "files": [],
+      "assertions": [
+        "cmd/start.go calls WithDatabase, WithRepository, WithServices and passes results to NewServer and the worker — no app.A access",
+        "internal/app/repository.go defines a Repository struct (not embedded in application)",
+        "internal/app/service.go defines a Service struct (not embedded in application)",
+        "internal/http/handlers/handlers.go defines a Handlers struct with a New constructor accepting *app.Service",
+        "Each handler action is a method on *Handlers (e.g. func (h *Handlers) CreateInvoice)",
+        "Worker job handler is a struct with svc *app.Service injected via constructor",
+        "No global var A or init() function in any app/ file"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Add a `client` domain to my existing Go service. I need: a Client model, a ClientRepository interface with Create/Get/Update/Delete methods and its sqlx implementation, a ClientService with business logic, and four Echo HTTP handlers. Use the global singleton pattern (app.A). Follow the project style guide.",
+      "expected_output": "internal/models/client.go with proper db/json struct tags and nullable pointer fields; internal/repository/client.go with interface + private impl + constructor; service wired into app.A.Service; four handler files (create_client.go, get_client.go, update_client.go, delete_client.go) each as plain functions using app.A.Service; ErrClientNotFound sentinel; sql.ErrNoRows mapped in the repo.",
+      "files": [],
+      "assertions": [
+        "models/client.go uses both `db:` and `json:` struct tags",
+        "repository/client.go defines a Client interface with Create/Get/Update/Delete accepting context.Context as first param",
+        "repository/client.go has a private implementation struct and a public constructor returning the interface",
+        "sql.ErrNoRows is mapped to a typed sentinel error (e.g. ErrClientNotFound)",
+        "Handler files are plain functions (not methods on a struct) and reference app.A.Service",
+        "Logging uses zap (log.Logger.Error / log.Logger.Info), not fmt.Println or stdlib log"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Show me how to write the JWT authentication middleware and the zap request-logging middleware for the Echo server, following our Go conventions. The logger middleware should skip /healthz and /metrics. Also show how they get registered in internal/http/server.go.",
+      "expected_output": "internal/http/middlewares/jwt_authentication.go and internal/http/middlewares/logger.go; ZapLogger accepts a *zap.Logger plus variadic skip URLs and returns echo.MiddlewareFunc; JWT middleware returns echo.ErrUnauthorized on failure; both registered in server.go before route definitions using e.Use().",
+      "files": [],
+      "assertions": [
+        "Middleware files are in internal/http/middlewares/ package",
+        "ZapLogger accepts skipURLs variadic and skips logging for /healthz and /metrics",
+        "JWT middleware returns echo.ErrUnauthorized (not a custom error type) when token is missing or invalid",
+        "Both middlewares are registered via e.Use() in server.go before route groups are defined",
+        "Middleware functions return echo.MiddlewareFunc"
+      ]
+    }
+  ]
+}

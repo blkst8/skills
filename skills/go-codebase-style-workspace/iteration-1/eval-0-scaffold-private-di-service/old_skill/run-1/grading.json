@@ -1,0 +1,45 @@
+{
+  "expectations": [
+    {
+      "text": "cmd/start.go calls WithDatabase, WithRepository, WithServices, and WithUsecases(repo, svc), then passes the usecase bundle to NewServer and the worker — no app.A access anywhere",
+      "passed": false,
+      "evidence": "cmd/start.go:50-54 calls app.WithDatabase(), app.WithRepository(db) and app.WithServices(db, repo) but there is no WithUsecases call or usecase bundle anywhere in the run (no WithUsecases symbol exists in the codebase). Lines 58 and 62 pass the Service bundle: workerhandlers.NewReconcileInvoices(svc) and httpserver.NewServer(svc). The 'no app.A access' clause itself holds, but the required WithUsecases wiring is absent. ARCHITECTURE DIFFERENCE: run has no usecase layer at all."
+    },
+    {
+      "text": "internal/app/repository.go defines a Repository struct with a WithRepository(db *sqlx.DB) constructor",
+      "passed": true,
+      "evidence": "internal/app/repository.go:10-18: 'type Repository struct { Invoice repository.Invoice }' and 'func WithRepository(db *sqlx.DB) *Repository' returning &Repository{Invoice: repository.NewInvoiceRepository(db)}."
+    },
+    {
+      "text": "internal/app/service.go defines a Service struct that holds only external-dependency clients (no *sqlx.DB, no repositories)",
+      "passed": false,
+      "evidence": "internal/app/service.go:16-18: 'func WithServices(db *sqlx.DB, repo *Repository) *Service' — the Service bundle is constructed from the DB and the repository bundle. Its only member is services.InvoiceService, whose concrete type (internal/services/invoice.go:41-50) holds 'db *sqlx.DB; repo repository.Invoice'. So the held service is DB/repository-backed business logic, not an external-dependency client. ARCHITECTURE DIFFERENCE: the run places business logic in a DB-backed service layer instead of a pure external-clients Service layer plus a usecase layer."
+    },
+    {
+      "text": "internal/app/usecase.go defines a Usecase struct and a WithUsecases(repo, svc) constructor that combines repositories and services",
+      "passed": false,
+      "evidence": "internal/app/usecase.go does not exist (app/ contains only app.go, db.go, repository.go, service.go) and no Usecase type or WithUsecases constructor exists anywhere in the run (grep for 'usecase' matched nothing except a summary.md mention)."
+    },
+    {
+      "text": "internal/http/handlers/handlers.go defines a Handlers struct with a New constructor accepting *app.Usecase, and handler actions are methods on *Handlers",
+      "passed": false,
+      "evidence": "internal/http/handlers/handlers.go:10-16 defines 'type Handlers struct { svc *app.Service }' with 'func New(svc *app.Service) *Handlers' — it accepts *app.Service, not *app.Usecase (which does not exist in this run). ARCHITECTURE DIFFERENCE: handlers are wired to the service bundle because there is no usecase layer. The actions-are-methods-on-*Handlers part does hold (e.g. create_invoice.go, get_invoice.go, list_invoices.go)."
+    },
+    {
+      "text": "Worker job handler is a struct with the usecase bundle injected via constructor (e.g. NewReconcileInvoices(uc)), calling into the usecase layer — not repositories or services directly",
+      "passed": false,
+      "evidence": "internal/worker/handlers/reconcile_invoices.go:16-23: 'type reconcileInvoices struct { svc *app.Service }' with 'func NewReconcileInvoices(svc *app.Service)'. Handle() calls h.svc.Invoice.Reconcile(ctx) (line 29) — it calls into the service layer, not a usecase layer (none exists). ARCHITECTURE DIFFERENCE: the struct-with-constructor pattern is followed, but the injected dependency is the service bundle rather than the usecase bundle the assertion requires."
+    },
+    {
+      "text": "No global var A or init()-based application struct in any app/ file",
+      "passed": true,
+      "evidence": "Grep for 'func init(' / 'var A' / 'app.A' across internal/app/ returned zero matches; internal/app/app.go only declares ldflags build-info vars (GitCommit, GitTag, BuildDate) and a Banner() helper. The only init() in the run is cmd/start.go:33 registering the cobra command, outside app/."
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 5,
+    "total": 7,
+    "pass_rate": 0.29
+  }
+}

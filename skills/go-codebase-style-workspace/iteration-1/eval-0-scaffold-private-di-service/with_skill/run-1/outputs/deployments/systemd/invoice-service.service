@@ -1,0 +1,15 @@
+[Unit]
+Description=Invoice Service
+After=network.target mysql.service
+
+[Service]
+Type=simple
+User=invoice-service
+Group=invoice-service
+WorkingDirectory=/opt/invoice-service
+ExecStart=/opt/invoice-service/invoice-service start --config /etc/invoice-service/config.yaml
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

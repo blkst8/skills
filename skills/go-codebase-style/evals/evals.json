@@ -1,0 +1,60 @@
+{
+  "skill_name": "go-codebase-style",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I'm starting a new Go service called `invoice-service`. It needs to connect to MySQL, expose a REST API with Echo, and run a background job that reconciles invoices every 5 minutes. Use the private dependency injection pattern. Scaffold the full project layout and wire everything together in cmd/start.go.",
+      "expected_output": "A complete project skeleton: correct directory layout (cmd/, internal/app/, internal/http/, internal/worker/, internal/repository/, internal/service/, internal/usecase/, internal/models/, migrations/, etc.), app/db.go returning *sqlx.DB, app/repository.go with Repository struct + WithRepository(db), app/service.go with Service struct holding only external clients + WithServices(), app/usecase.go with Usecase struct + WithUsecases(repo, svc), handlers/handlers.go with Handlers struct + New(uc *app.Usecase), ticker job handler struct receiving *app.Usecase, cmd/start.go wiring db→repo→svc→uc→server/worker. No global app.A usage anywhere.",
+      "files": [],
+      "assertions": [
+        "cmd/start.go calls WithDatabase, WithRepository, WithServices, and WithUsecases(repo, svc), then passes the usecase bundle to NewServer and the worker — no app.A access anywhere",
+        "internal/app/repository.go defines a Repository struct with a WithRepository(db *sqlx.DB) constructor",
+        "internal/app/service.go defines a Service struct that holds only external-dependency clients (no *sqlx.DB, no repositories)",
+        "internal/app/usecase.go defines a Usecase struct and a WithUsecases(repo, svc) constructor that combines repositories and services",
+        "internal/http/handlers/handlers.go defines a Handlers struct with a New constructor accepting *app.Usecase, and handler actions are methods on *Handlers",
+        "Worker job handler is a struct with the usecase bundle injected via constructor (e.g. NewReconcileInvoices(uc)), calling into the usecase layer — not repositories or services directly",
+        "No global var A or init()-based application struct in any app/ file"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Add a `client` domain to my existing Go service. I need: a Client model, a ClientRepository interface with Create/Get/Update/Delete methods and its sqlx implementation, a ClientUsecase with a Create flow, and four Echo HTTP handlers. Use the global singleton pattern (app.A). Follow the project style guide.",
+      "expected_output": "internal/models/client.go with db/json struct tags and nullable pointer fields; internal/repository/client.go with interface + private impl + constructor and ErrClientNotFound sentinel mapped from sql.ErrNoRows; internal/usecase/client.go with ClientUsecase interface + private impl + NewClientUsecase; four handler files (create_client.go, get_client.go, update_client.go, delete_client.go) each as plain functions using app.A.Usecase.Client; zap logging throughout.",
+      "files": [],
+      "assertions": [
+        "models/client.go uses both `db:` and `json:` struct tags, with a nullable field as a pointer type (e.g. UpdatedAt *time.Time)",
+        "repository/client.go defines a Client interface with Create/Get/Update/Delete accepting context.Context as first param, plus a private implementation struct and a public constructor returning the interface",
+        "repository maps sql.ErrNoRows to a typed sentinel error (e.g. ErrClientNotFound)",
+        "usecase/client.go defines a ClientUsecase interface, a private implementation struct, and a NewClientUsecase constructor; Create wraps repo errors with fmt.Errorf and %w",
+        "Handler files are plain functions (not methods on a struct) and call the usecase via app.A.Usecase.Client — never app.A.Service or app.A.Repository directly",
+        "Logging uses zap (log.Logger.Error / log.Logger.Info), not fmt.Println or stdlib log"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "My Go service needs to send a Telegram welcome message whenever a new client signs up. Build it following our Go conventions: a notifier client for the Telegram Bot API, and wire the send into the client-creation flow. If Telegram is down, client creation must still succeed.",
+      "expected_output": "internal/service/notifier/notifier.go with Notifier interface + private telegramNotifier + New(token) constructor returning the interface; pure external I/O with http.NewRequestWithContext, no DB imports; the usecase's Create flow injects both repository.Client and notifier.Notifier, calls notifier.Send after persisting, logs failure with zap and continues; handler calls only the usecase.",
+      "files": [],
+      "assertions": [
+        "A new package internal/service/notifier/ (package notifier) is created with an interface, a private implementation struct, and a constructor returning the interface",
+        "The notifier package does not import sqlx, repository, or any database code — it performs external HTTP I/O with a context-aware request (http.NewRequestWithContext)",
+        "The usecase implementation receives BOTH repository.Client and notifier.Notifier via its constructor and calls notifier.Send inside the create flow",
+        "A notification failure is logged (zap) and NOT returned as an error — the client-creation flow continues and returns success",
+        "The HTTP handler calls only the usecase; the handler never touches the notifier or repository directly"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Show me how to write the JWT authentication middleware and the zap request-logging middleware for the Echo server, following our Go conventions. The logger middleware should skip /healthz and /metrics. Also show how they get registered in internal/http/server.go.",
+      "expected_output": "internal/http/middlewares/jwt_authentication.go and internal/http/middlewares/logger.go; ZapLogger accepts a *zap.Logger plus variadic skip URLs and returns echo.MiddlewareFunc; JWT middleware returns echo.ErrUnauthorized on failure; both registered in server.go before route definitions using e.Use().",
+      "files": [],
+      "assertions": [
+        "Middleware files are in internal/http/middlewares/ package",
+        "ZapLogger accepts skipURLs variadic and skips logging for /healthz and /metrics",
+        "JWT middleware returns echo.ErrUnauthorized (not a custom error type) when token is missing or invalid",
+        "Both middlewares are registered via e.Use() in server.go before route groups are defined",
+        "Middleware functions return echo.MiddlewareFunc"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "expectations": [
+    {
+      "text": "cmd/start.go calls WithDatabase, WithRepository, WithServices, and WithUsecases(repo, svc), then passes the usecase bundle to NewServer and the worker — no app.A access anywhere",
+      "passed": true,
+      "evidence": "cmd/start.go:39-44 chains db := app.WithDatabase(), repo := app.WithRepository(db), svc := app.WithServices(), uc := app.WithUsecases(repo, svc). The uc bundle is passed to workerhandlers.NewReconcileInvoices(uc) (line 49), workers.NewReconcileInvoicesTask(uc) (line 58) and httpserver.NewServer(uc) (line 63). Repo-wide grep found no 'app.A' identifier anywhere."
+    },
+    {
+      "text": "internal/app/repository.go defines a Repository struct with a WithRepository(db *sqlx.DB) constructor",
+      "passed": true,
+      "evidence": "internal/app/repository.go:10-19: 'type Repository struct { Invoice repository.Invoice }' and 'func WithRepository(db *sqlx.DB) *Repository' returning &Repository{Invoice: repository.NewInvoiceRepository(db)}."
+    },
+    {
+      "text": "internal/app/service.go defines a Service struct that holds only external-dependency clients (no *sqlx.DB, no repositories)",
+      "passed": true,
+      "evidence": "internal/app/service.go:11-20: 'type Service struct { Notifier notifier.Notifier }' — only an external webhook client; WithServices() takes no arguments (no db, no repo). Comment explicitly states 'Services never receive the database or repositories.' The DB-backed business logic lives in internal/usecase/invoice.go instead."
+    },
+    {
+      "text": "internal/app/usecase.go defines a Usecase struct and a WithUsecases(repo, svc) constructor that combines repositories and services",
+      "passed": true,
+      "evidence": "internal/app/usecase.go:9-19: 'type Usecase struct { Invoice usecase.InvoiceUsecase }' and 'func WithUsecases(repo *Repository, svc *Service) *Usecase' returning usecase.NewInvoiceUsecase(repo.Invoice, svc.Notifier), combining both bundles."
+    },
+    {
+      "text": "internal/http/handlers/handlers.go defines a Handlers struct with a New constructor accepting *app.Usecase, and handler actions are methods on *Handlers",
+      "passed": true,
+      "evidence": "internal/http/handlers/handlers.go:16-22: 'type Handlers struct { uc *app.Usecase }' and 'func New(uc *app.Usecase) *Handlers'. Business actions are methods on *Handlers: CreateInvoice (create_invoice.go:26), GetInvoice (get_invoice.go:19), ListInvoices (list_invoices.go:15); each calls h.uc.Invoice.* (e.g. create_invoice.go:37 calls h.uc.Invoice.Create). Note: dependency-free infra endpoints Healthz (healthz.go:10) and Metrics (metrics.go:10) remain package-level functions, which is acceptable since they need no dependencies."
+    },
+    {
+      "text": "Worker job handler is a struct with the usecase bundle injected via constructor (e.g. NewReconcileInvoices(uc)), calling into the usecase layer — not repositories or services directly",
+      "passed": true,
+      "evidence": "internal/worker/handlers/reconcile_invoices.go:13-19: 'type reconcileInvoices struct { uc *app.Usecase }' with 'func NewReconcileInvoices(uc *app.Usecase)'. Handle() calls h.uc.Invoice.Reconcile(ctx) (line 25) — usecase layer only, no repo/service imports. The pool variant internal/workers/tasks.go:10-22 follows the same pattern."
+    },
+    {
+      "text": "No global var A or init()-based application struct in any app/ file",
+      "passed": true,
+      "evidence": "Grep for 'func init(' / 'var A' / 'app.A' across internal/app/ returned zero matches; internal/app/app.go only declares ldflags build-info vars (GitCommit, GitTag, etc.) and a Banner() helper. The init() functions that do exist elsewhere (cmd/root.go:37, internal/log/log.go:15, internal/metrics/business.go:27) are cobra/logging/metrics setup, not an application struct."
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7,
+    "pass_rate": 1.0
+  }
+}

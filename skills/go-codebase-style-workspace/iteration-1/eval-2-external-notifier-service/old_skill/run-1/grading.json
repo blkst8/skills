@@ -1,0 +1,35 @@
+{
+  "expectations": [
+    {
+      "text": "A new package internal/service/notifier/ (package notifier) is created with an interface, a private implementation struct, and a constructor returning the interface",
+      "passed": false,
+      "evidence": "The notifier is created at internal/services/notifier/ (plural 'services'), not the required internal/service/notifier/ — internal/services/notifier/notifier.go has `package notifier` with a `Notifier` interface (line 19), private `telegram` impl struct (telegram.go line 29), and `New(cfg config.Telegram) Notifier` returning the interface (lines 28-34), so the content pattern is present but the v1.1-required singular 'service' path internal/service/notifier/ does not exist anywhere in the run. summary.md lines 60-62 explicitly acknowledge the deviation: 'placed in internal/services/notifier per the guide's internal/services convention rather than the illustrative internal/service|usecase paths'."
+    },
+    {
+      "text": "The notifier package does not import sqlx, repository, or any database code — it performs external HTTP I/O with a context-aware request (http.NewRequestWithContext)",
+      "passed": true,
+      "evidence": "internal/services/notifier/notifier.go imports only context and internal/config; telegram.go imports bytes, context, encoding/json, fmt, io, net/http, strings, time and internal/config — no sqlx/repository/database code. telegram.go line 75: `req, err := http.NewRequestWithContext(ctx, http.MethodPost, apiURL, bytes.NewReader(payload))` posting to the Telegram Bot API sendMessage endpoint, with transport error, body-read, and API 'ok': false handling (lines 81-99)."
+    },
+    {
+      "text": "The usecase implementation receives BOTH repository.Client and notifier.Notifier via its constructor and calls notifier.Send inside the create flow",
+      "passed": false,
+      "evidence": "There is no internal/usecase/ layer anywhere in this run — the business logic lives in internal/services/client.go as a `ClientService` (architectural difference: old-skill layout wires deps into a service consumed directly by handlers instead of a usecase). The closest analog, `NewClientService(clients repository.Client, notifier notifier.Notifier)` (internal/services/client.go line 45), does receive both deps, but it is not a usecase and it calls `c.notifier.SendMessage` (line 93), not `notifier.Send`."
+    },
+    {
+      "text": "A notification failure is logged (zap) and NOT returned as an error — the client-creation flow continues and returns success",
+      "passed": true,
+      "evidence": "internal/services/client.go: `sendWelcomeMessage` (lines 87-99) logs `log.Logger.Error(\"failed to send telegram welcome message\", zap.Error(err), zap.Uint32(\"client_id\", ...), zap.String(\"telegram_id\", ...))` and returns nothing; `Create` (lines 59-73) calls it after the DB insert and returns `&client, nil`, so notifier failure never propagates. Doc comment lines 55-58: 'the error is logged and client creation still succeeds'. Verified by running `go test ./...`: subtest 'telegram down does not fail creation' in internal/services/client_test.go passes. (Note: this behavior lives in the service layer, not a usecase — the layer-agnostic behavioral assertion is satisfied.)"
+    },
+    {
+      "text": "The HTTP handler calls only the usecase; the handler never touches the notifier or repository directly",
+      "passed": false,
+      "evidence": "There is no usecase layer to call: internal/http/handlers/create_client.go line 51 calls `h.svc.Client.Create(...)` — a `services.ClientService` (import `internal/services`, line 10) — and get_client.go line 33 calls `h.svc.Client.Get`, so handlers are wired to the service bundle, not a usecase. To its credit, no handler calls notifier or repository methods directly (the only `repository` reference is the sentinel `repository.ErrClientNotFound` mapping in get_client.go line 37), but the assertion's core requirement — handler delegates to a usecase — is unmet because the run's architecture omits the usecase layer entirely."
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 3,
+    "total": 5,
+    "pass_rate": 0.4
+  }
+}
