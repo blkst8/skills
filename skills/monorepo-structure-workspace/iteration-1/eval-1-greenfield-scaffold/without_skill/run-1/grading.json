@@ -1,0 +1,49 @@
+{
+  "expectations": [
+    {
+      "text": "apps/ contains web and api; packages/ exists",
+      "passed": true,
+      "evidence": "apps=iteration-1/eval-1-greenfield-scaffold/without_skill/outputs/apps web=iteration-1/eval-1-greenfield-scaffold/without_skill/outputs/apps/web api=iteration-1/eval-1-greenfield-scaffold/without_skill/outputs/apps/api packages=iteration-1/eval-1-greenfield-scaffold/without_skill/outputs/packages"
+    },
+    {
+      "text": "pnpm-workspace.yaml globs apps/* and packages/*",
+      "passed": true,
+      "evidence": "packages:\n  - \"apps/*\"\n  - \"packages/*\""
+    },
+    {
+      "text": "turbo.json build task with dependsOn ^build",
+      "passed": true,
+      "evidence": "{   \"$schema\": \"https://turbo.build/schema.json\",   \"tasks\": {     \"build\": {       \"dependsOn\": [\"^build\"],       \"inpu"
+    },
+    {
+      "text": "shared types package exists; no deep relative imports into packages",
+      "passed": true,
+      "evidence": "Shared contract types exist in packages/shared (@dashboard/shared) and both apps import them via workspace:* dependency (apps/api controller and apps/web fetch client import DashboardSummary/ApiError); no deep relative imports into packages found in app code. Types live in shared rather than a dedicated types package \u2014 style difference, intent (workspace-package consumption, no cross-app source imports) met."
+    },
+    {
+      "text": "per-app .env.example for web and api; no mixed root .env",
+      "passed": true,
+      "evidence": "web_env=[PosixPath('iteration-1/eval-1-greenfield-scaffold/without_skill/outputs/apps/web/.env.example')] api_env=[PosixPath('iteration-1/eval-1-greenfield-scaffold/without_skill/outputs/apps/api/.env.example')] root_env=False"
+    },
+    {
+      "text": "root package.json scripts delegate to turbo for dev/build/test",
+      "passed": false,
+      "evidence": "{\"dev\": \"turbo run dev\", \"build\": \"turbo run build\", \"typecheck\": \"turbo run typecheck\", \"db:generate\": \"pnpm --filter @dashboard/database db:generate"
+    },
+    {
+      "text": "docker-compose at root provides Postgres",
+      "passed": false,
+      "evidence": ""
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 2,
+    "total": 7,
+    "pass_rate": 0.71
+  },
+  "timing": {
+    "executor_duration_seconds": 280.0,
+    "total_duration_seconds": 280.0
+  }
+}

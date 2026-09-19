@@ -1,0 +1,25 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+.next/
+out/
+
+# turbo
+.turbo/
+
+# env
+.env
+.env.local
+.env.*.local
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# logs & misc
+npm-debug.log*
+pnpm-debug.log*
+coverage/
+.DS_Store

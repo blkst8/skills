@@ -1,0 +1,34 @@
+{
+  "expectations": [
+    {
+      "text": "Places the zod schema in a runtime shared package (e.g. packages/shared), distinguishing it from the type-only packages/types \u2014 with reasoning, not just a destination",
+      "passed": true,
+      "evidence": "Answer: 'the zod signup schema \u2192 packages/shared (a new shared package)'; 'It's shared code, not just shared types \u2014 so it does not belong in your existing packages/types'. Reasoning given: stable, pure, no deployment concerns; workspace:* wiring for both apps; z.infer type export suggested."
+    },
+    {
+      "text": "Rejects moving Prisma models into a shared package, keeping them in apps/api, and explains the coupling cost",
+      "passed": true,
+      "evidence": "Answer: 'Prisma models stay in apps/api \u2014 don't move them into a shared package', with three named costs: dragging the ORM into the frontend (engine binaries/toolchain in the web build), schema changes breaking both apps at once, leakage of DB internals (password hashes, internal flags) into the UI."
+    },
+    {
+      "text": "Offers the DTO route as the sharing mechanism: expose user shapes via packages/types so the frontend gets types, not models",
+      "passed": true,
+      "evidence": "Answer: 'DTOs in the existing packages/types' with SignupRequestDto/UserDto examples; 'the API maps Prisma models \u2192 DTOs in its responses (UserDto never has passwordHash)'; frontend does `import type { UserDto } from \"@repo/types\"`."
+    },
+    {
+      "text": "No packages/ui recommendation for a single frontend app, and the answer stays advice (no project scaffolding)",
+      "passed": true,
+      "evidence": "Answer: 'since you have exactly one frontend app and no design system, resist creating packages/ui'. Pure written advice; only answer.md produced."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "executor_duration_seconds": 33.8,
+    "total_duration_seconds": 33.8
+  }
+}

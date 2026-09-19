@@ -1,0 +1,450 @@
+{
+  "metadata": {
+    "skill_name": "monorepo-structure",
+    "skill_path": "/home/blkst8/src/github/blkst8/skills/skills/monorepo-structure",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-09-18T19:25:58Z",
+    "evals_run": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 539.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "apps/ contains web and api; packages/ exists",
+          "passed": true,
+          "evidence": "apps=iteration-1/eval-1-greenfield-scaffold/with_skill/outputs/project/apps web=iteration-1/eval-1-greenfield-scaffold/with_skill/outputs/project/apps/web api=iteration-1/eval-1-greenfield-scaffold/with_skill/outputs/project/apps/api packages=iteration-1/eval-1-greenfield-scaffold/with_skill/outputs"
+        },
+        {
+          "text": "pnpm-workspace.yaml globs apps/* and packages/*",
+          "passed": true,
+          "evidence": "packages:\n  - \"apps/*\"\n  - \"packages/*\""
+        },
+        {
+          "text": "turbo.json build task with dependsOn ^build",
+          "passed": true,
+          "evidence": "{   \"$schema\": \"https://turbo.build/schema.json\",   \"tasks\": {     \"dev\": {       \"dependsOn\": [\"^build\"],       \"cache\""
+        },
+        {
+          "text": "shared types package exists; no deep relative imports into packages",
+          "passed": true,
+          "evidence": "types_pkg=iteration-1/eval-1-greenfield-scaffold/with_skill/outputs/project/packages/types/package.json deep_import=None"
+        },
+        {
+          "text": "per-app .env.example for web and api; no mixed root .env",
+          "passed": true,
+          "evidence": "web_env=[PosixPath('iteration-1/eval-1-greenfield-scaffold/with_skill/outputs/project/apps/web/.env.example')] api_env=[PosixPath('iteration-1/eval-1-greenfield-scaffold/with_skill/outputs/project/apps/api/.env.example')] root_env=False"
+        },
+        {
+          "text": "root package.json scripts delegate to turbo for dev/build/test",
+          "passed": true,
+          "evidence": "{\"dev\": \"turbo dev\", \"build\": \"turbo build\", \"test\": \"turbo test\", \"lint\": \"turbo lint\", \"format\": \"prettier --write .\"}"
+        },
+        {
+          "text": "docker-compose at root provides Postgres",
+          "passed": true,
+          "evidence": "services:\n  postgres:\n    image: postgres:16\n    environment:\n      POSTGRES_USER: dashboard\n      POSTGRES_PASSWORD: da"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 268.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "no logic lost: all original functions/routes survive",
+          "passed": true,
+          "evidence": "all 12 symbol groups present"
+        },
+        {
+          "text": "UserDto defined once in a packages/ dir and referenced by apps",
+          "passed": true,
+          "evidence": "defs=1 in_packages=True"
+        },
+        {
+          "text": "root .env split into per-app env files; no mixed root .env",
+          "passed": true,
+          "evidence": "web_env=['iteration-1/eval-2-legacy-restructure/with_skill/outputs/apps/web/.env.example', 'iteration-1/eval-2-legacy-restructure/with_skill/outputs/apps/web/.env.local'] api_env=['iteration-1/eval-2-legacy-restructure/with_skill/outputs/apps/api/.env.example', 'iteration-1/eval-2-legacy-restructure"
+        },
+        {
+          "text": "database code (pg/Pool/SQL) stays inside apps/api, not in packages/",
+          "passed": true,
+          "evidence": "leak=None"
+        },
+        {
+          "text": "pnpm-workspace.yaml + turbo.json + root package.json present",
+          "passed": true,
+          "evidence": "ws=True turbo=True root_pkg=True"
+        },
+        {
+          "text": "original fixture untouched",
+          "passed": true,
+          "evidence": "19 entries, none modified"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 33.8,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Places the zod schema in a runtime shared package (e.g. packages/shared), distinguishing it from the type-only packages/types \u2014 with reasoning, not just a destination",
+          "passed": true,
+          "evidence": "Answer: 'the zod signup schema \u2192 packages/shared (a new shared package)'; 'It's shared code, not just shared types \u2014 so it does not belong in your existing packages/types'. Reasoning given: stable, pure, no deployment concerns; workspace:* wiring for both apps; z.infer type export suggested."
+        },
+        {
+          "text": "Rejects moving Prisma models into a shared package, keeping them in apps/api, and explains the coupling cost",
+          "passed": true,
+          "evidence": "Answer: 'Prisma models stay in apps/api \u2014 don't move them into a shared package', with three named costs: dragging the ORM into the frontend (engine binaries/toolchain in the web build), schema changes breaking both apps at once, leakage of DB internals (password hashes, internal flags) into the UI."
+        },
+        {
+          "text": "Offers the DTO route as the sharing mechanism: expose user shapes via packages/types so the frontend gets types, not models",
+          "passed": true,
+          "evidence": "Answer: 'DTOs in the existing packages/types' with SignupRequestDto/UserDto examples; 'the API maps Prisma models \u2192 DTOs in its responses (UserDto never has passwordHash)'; frontend does `import type { UserDto } from \"@repo/types\"`."
+        },
+        {
+          "text": "No packages/ui recommendation for a single frontend app, and the answer stays advice (no project scaffolding)",
+          "passed": true,
+          "evidence": "Answer: 'since you have exactly one frontend app and no design system, resist creating packages/ui'. Pure written advice; only answer.md produced."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 4,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 224.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "apps/api is a native Go module (go.mod)",
+          "passed": true,
+          "evidence": "go.mod=iteration-1/eval-4-polyglot-scaffold/with_skill/outputs/project/apps/api/go.mod"
+        },
+        {
+          "text": "no JS dependencies injected into the Go app",
+          "passed": true,
+          "evidence": "no package.json in api"
+        },
+        {
+          "text": "cross-language sharing via schemas/codegen (openapi/proto/generate)",
+          "passed": true,
+          "evidence": "match=iteration-1/eval-4-polyglot-scaffold/with_skill/outputs/project/apps/api/internal/store/store.go"
+        },
+        {
+          "text": "one orchestration story: Makefile/justfile or thin package.json wrapper",
+          "passed": true,
+          "evidence": "makefile=iteration-1/eval-4-polyglot-scaffold/with_skill/outputs/project/Makefile wrapper=None"
+        },
+        {
+          "text": "apps/ + packages/ separation; planned home for python scraper",
+          "passed": true,
+          "evidence": "apps/ and packages/ both exist. Scraper home documented in the run's answer text: 'apps/scraper with a pyproject.toml (native, like the Go app \u2014 no package.json), a scraper: target in the Makefile, and its own .env.example. Not scaffolded now \u2014 an empty app dir is premature'. No file in outputs mentions scraper (plan lives in the reply), which is why the file grep initially missed it."
+        },
+        {
+          "text": "per-app env files + docker-compose Postgres at root",
+          "passed": true,
+          "evidence": "web_env=True api_env=True compose=True"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.71,
+        "passed": 5,
+        "failed": 2,
+        "total": 7,
+        "time_seconds": 280.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "apps/ contains web and api; packages/ exists",
+          "passed": true,
+          "evidence": "apps=iteration-1/eval-1-greenfield-scaffold/without_skill/outputs/apps web=iteration-1/eval-1-greenfield-scaffold/without_skill/outputs/apps/web api=iteration-1/eval-1-greenfield-scaffold/without_skill/outputs/apps/api packages=iteration-1/eval-1-greenfield-scaffold/without_skill/outputs/packages"
+        },
+        {
+          "text": "pnpm-workspace.yaml globs apps/* and packages/*",
+          "passed": true,
+          "evidence": "packages:\n  - \"apps/*\"\n  - \"packages/*\""
+        },
+        {
+          "text": "turbo.json build task with dependsOn ^build",
+          "passed": true,
+          "evidence": "{   \"$schema\": \"https://turbo.build/schema.json\",   \"tasks\": {     \"build\": {       \"dependsOn\": [\"^build\"],       \"inpu"
+        },
+        {
+          "text": "shared types package exists; no deep relative imports into packages",
+          "passed": true,
+          "evidence": "Shared contract types exist in packages/shared (@dashboard/shared) and both apps import them via workspace:* dependency (apps/api controller and apps/web fetch client import DashboardSummary/ApiError); no deep relative imports into packages found in app code. Types live in shared rather than a dedicated types package \u2014 style difference, intent (workspace-package consumption, no cross-app source imports) met."
+        },
+        {
+          "text": "per-app .env.example for web and api; no mixed root .env",
+          "passed": true,
+          "evidence": "web_env=[PosixPath('iteration-1/eval-1-greenfield-scaffold/without_skill/outputs/apps/web/.env.example')] api_env=[PosixPath('iteration-1/eval-1-greenfield-scaffold/without_skill/outputs/apps/api/.env.example')] root_env=False"
+        },
+        {
+          "text": "root package.json scripts delegate to turbo for dev/build/test",
+          "passed": false,
+          "evidence": "{\"dev\": \"turbo run dev\", \"build\": \"turbo run build\", \"typecheck\": \"turbo run typecheck\", \"db:generate\": \"pnpm --filter @dashboard/database db:generate"
+        },
+        {
+          "text": "docker-compose at root provides Postgres",
+          "passed": false,
+          "evidence": ""
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 317.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "no logic lost: all original functions/routes survive",
+          "passed": true,
+          "evidence": "all 12 symbol groups present"
+        },
+        {
+          "text": "UserDto defined once in a packages/ dir and referenced by apps",
+          "passed": true,
+          "evidence": "defs=1 in_packages=True"
+        },
+        {
+          "text": "root .env split into per-app env files; no mixed root .env",
+          "passed": true,
+          "evidence": "web_env=['iteration-1/eval-2-legacy-restructure/without_skill/outputs/legacy-app/apps/web/.env.example', 'iteration-1/eval-2-legacy-restructure/without_skill/outputs/legacy-app/apps/web/.env'] api_env=['iteration-1/eval-2-legacy-restructure/without_skill/outputs/legacy-app/apps/api/.env.example', 'i"
+        },
+        {
+          "text": "database code (pg/Pool/SQL) stays inside apps/api, not in packages/",
+          "passed": true,
+          "evidence": "leak=None"
+        },
+        {
+          "text": "pnpm-workspace.yaml + turbo.json + root package.json present",
+          "passed": true,
+          "evidence": "ws=True turbo=True root_pkg=True"
+        },
+        {
+          "text": "original fixture untouched",
+          "passed": true,
+          "evidence": "19 entries, none modified"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.5,
+        "passed": 2,
+        "failed": 2,
+        "total": 4,
+        "time_seconds": 44.2,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Places the zod schema in a runtime shared package (e.g. packages/shared), distinguishing it from the type-only packages/types \u2014 with reasoning, not just a destination",
+          "passed": true,
+          "evidence": "Answer: new `packages/validation` package (runtime code kept out of the types-only packages/types) with reasoning that zod is runtime logic with a dependency; workspace:* wiring shown for both apps."
+        },
+        {
+          "text": "Rejects moving Prisma models into a shared package, keeping them in apps/api, and explains the coupling cost",
+          "passed": false,
+          "evidence": "Contradicts the expectation: answer recommends creating `packages/db` with the Prisma schema, generated client, and migrations ('Moving the Prisma schema/client into a shared package is a good idea'). Models no longer live in apps/api. Only caveat: don't import PrismaClient into the browser bundle."
+        },
+        {
+          "text": "Offers the DTO route as the sharing mechanism: expose user shapes via packages/types so the frontend gets types, not models",
+          "passed": false,
+          "evidence": "No DTO mapping route offered; frontend shares raw Prisma-generated types imported from `@your-org/db`. No packages/types DTO layer mentioned."
+        },
+        {
+          "text": "No packages/ui recommendation for a single frontend app, and the answer stays advice (no project scaffolding)",
+          "passed": true,
+          "evidence": "Answer: 'don't add a packages/ui \u2014 with exactly one frontend app, that would be premature'. Pure written advice; only answer.md produced."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 4,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.83,
+        "passed": 5,
+        "failed": 1,
+        "total": 6,
+        "time_seconds": 176.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "apps/api is a native Go module (go.mod)",
+          "passed": true,
+          "evidence": "go.mod=iteration-1/eval-4-polyglot-scaffold/without_skill/outputs/apps/api/go.mod"
+        },
+        {
+          "text": "no JS dependencies injected into the Go app",
+          "passed": true,
+          "evidence": "no package.json in api"
+        },
+        {
+          "text": "cross-language sharing via schemas/codegen (openapi/proto/generate)",
+          "passed": true,
+          "evidence": "match=iteration-1/eval-4-polyglot-scaffold/without_skill/outputs/apps/api/internal/apitypes/types.go"
+        },
+        {
+          "text": "one orchestration story: Makefile/justfile or thin package.json wrapper",
+          "passed": true,
+          "evidence": "makefile=iteration-1/eval-4-polyglot-scaffold/without_skill/outputs/Makefile wrapper=None"
+        },
+        {
+          "text": "apps/ + packages/ separation; planned home for python scraper",
+          "passed": true,
+          "evidence": "apps=iteration-1/eval-4-polyglot-scaffold/without_skill/outputs/apps packages=iteration-1/eval-4-polyglot-scaffold/without_skill/outputs/packages scraper=iteration-1/eval-4-polyglot-scaffold/without_skill/outputs/pnpm-workspace.yaml"
+        },
+        {
+          "text": "per-app env files + docker-compose Postgres at root",
+          "passed": false,
+          "evidence": "web_env=False api_env=True compose=False"
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 266.2,
+        "stddev": 208.3376,
+        "min": 33.8,
+        "max": 539.0
+      },
+      "tokens": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.76,
+        "stddev": 0.2102,
+        "min": 0.5,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 204.3,
+        "stddev": 122.2902,
+        "min": 44.2,
+        "max": 317.0
+      },
+      "tokens": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.24",
+      "time_seconds": "+61.9",
+      "tokens": "+0"
+    }
+  },
+  "notes": [
+    "Aggregate delta (+24pp: 100% vs 76%) is driven almost entirely by eval-3 and eval-1: eval-3 (placement Q&A) is the sharpest differentiator (4/4 vs 2/4), failing the baseline exactly on the two database-coupling assertions the skill spends Principle 1 and Principle 3 on.",
+    "Eval-2 (legacy restructure) is non-discriminating: both configurations scored 6/6. The assertions check outcomes any competent agent reaches (preserve logic, split env, wire pnpm+turbo). What the skill uniquely prescribes \u2014 feature-grouping INSIDE apps/api (modules/users/) vs the baseline's layer-grouping (src/routes/, src/models/, src/db.js, src/lib/) \u2014 has no assertion, so the structural difference the skill causes is invisible to the benchmark.",
+    "Eval-1 baseline created a packages/database package exporting the Prisma client \u2014 precisely the over-sharing pattern the skill's Principle 3 forbids. Eval-1 has no assertion checking 'no DB/ORM code in packages/', so this went ungraded; eval-2 has the check (leak=None) but eval-1 doesn't.",
+    "Scripted name-based checks are brittle: eval-1's 'shared types package' check initially failed the baseline because it globbed for packages/types specifically, while the baseline shared types via packages/shared \u2014 intent satisfied, name not. Corrected to pass; name-agnostic checks are needed.",
+    "Eval-4 assertion 'planned home for the python scraper' conflicts with the skill's own guidance: the with-skill run deliberately did NOT scaffold apps/scraper ('an empty app dir is premature') and documented the plan in prose, which a file-content grep can't see; the baseline's scaffolded tools/scraper passed the grep. Corrected in grading to credit the documented plan; the assertion should read 'documented or scaffolded home'.",
+    "Baseline eval-4 missed docker-compose entirely (no local Postgres provisioning) and wrote no web env file; with-skill provided both plus a Makefile with db-up/db-down targets. With-skill 6/6 vs 5/6 here is understated: the OpenAPI contract package (@repo/api-schema with a generate script) is a materially stronger sharing mechanism than the baseline's hand-mirrored Go structs with 'sync the json tags by convention' comments.",
+    "Timing: with-skill runs are slower on scaffold evals (eval-1: 539s vs 280s; eval-4: 224s vs 176s) \u2014 the cost of reading two reference files and producing more complete output (47 vs 28 files). On the restructure (eval-2: 268s vs 317s) and advice (eval-3: 34s vs 44s) runs the skill is faster or equal.",
+    "total_tokens was not delivered by the task notifications (null in all timing.json) \u2014 timing comparisons rest on wall-clock duration only.",
+    "Skill-followed evidence: all four with-skill runs explicitly read SKILL.md first, classified the request via its routing table, and read the correct reference file for their scenario (ts-stack, migration, polyglot) \u2014 the routing table in SKILL.md is doing real work."
+  ]
+}

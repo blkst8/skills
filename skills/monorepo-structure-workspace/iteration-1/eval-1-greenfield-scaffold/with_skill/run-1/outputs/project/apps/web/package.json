@@ -1,0 +1,28 @@
+{
+  "name": "@dashboard/web",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@repo/shared": "workspace:*",
+    "@repo/types": "workspace:*",
+    "next": "^14.2.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.1.0",
+    "@repo/config": "workspace:*",
+    "@types/node": "^20.14.9",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "eslint": "^9.6.0",
+    "eslint-config-next": "^14.2.5",
+    "typescript": "^5.5.3"
+  }
+}

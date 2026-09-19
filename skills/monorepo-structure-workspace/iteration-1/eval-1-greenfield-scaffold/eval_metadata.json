@@ -1,0 +1,14 @@
+{
+  "eval_id": 1,
+  "eval_name": "greenfield-scaffold",
+  "prompt": "I'm kicking off a new project for my team — a dashboard app with a Next.js frontend and a NestJS backend, Postgres for storage. I want it as a monorepo from day one so the frontend can import types from the backend contract instead of us copy-pasting them like on our last project. Can you set it up? Just the structure and config, we'll build features later.",
+  "assertions": [
+    "Layout separates deployable apps from shared packages: an apps/ directory contains both the web and api apps, and a packages/ directory exists",
+    "pnpm workspace wiring present: pnpm-workspace.yaml globs apps/* and packages/*",
+    "Turborepo configured with dependency-aware build order: turbo.json has a build task with dependsOn ^build",
+    "A shared types package exists and would be consumed via workspace package name (e.g. @repo/types), with no deep relative imports like ../../../packages/ in app code",
+    "Per-app environment files: apps/web and apps/api each have their own .env.example (or equivalent), and there is no single repo-wide .env with mixed secrets",
+    "Root package.json scripts delegate to turbo for dev/build/test",
+    "Postgres available for local dev via docker-compose.yml (or documented equivalent) at the root"
+  ]
+}

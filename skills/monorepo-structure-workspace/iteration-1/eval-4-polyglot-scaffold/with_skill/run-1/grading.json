@@ -1,0 +1,44 @@
+{
+  "expectations": [
+    {
+      "text": "apps/api is a native Go module (go.mod)",
+      "passed": true,
+      "evidence": "go.mod=iteration-1/eval-4-polyglot-scaffold/with_skill/outputs/project/apps/api/go.mod"
+    },
+    {
+      "text": "no JS dependencies injected into the Go app",
+      "passed": true,
+      "evidence": "no package.json in api"
+    },
+    {
+      "text": "cross-language sharing via schemas/codegen (openapi/proto/generate)",
+      "passed": true,
+      "evidence": "match=iteration-1/eval-4-polyglot-scaffold/with_skill/outputs/project/apps/api/internal/store/store.go"
+    },
+    {
+      "text": "one orchestration story: Makefile/justfile or thin package.json wrapper",
+      "passed": true,
+      "evidence": "makefile=iteration-1/eval-4-polyglot-scaffold/with_skill/outputs/project/Makefile wrapper=None"
+    },
+    {
+      "text": "apps/ + packages/ separation; planned home for python scraper",
+      "passed": true,
+      "evidence": "apps/ and packages/ both exist. Scraper home documented in the run's answer text: 'apps/scraper with a pyproject.toml (native, like the Go app \u2014 no package.json), a scraper: target in the Makefile, and its own .env.example. Not scaffolded now \u2014 an empty app dir is premature'. No file in outputs mentions scraper (plan lives in the reply), which is why the file grep initially missed it."
+    },
+    {
+      "text": "per-app env files + docker-compose Postgres at root",
+      "passed": true,
+      "evidence": "web_env=True api_env=True compose=True"
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "executor_duration_seconds": 224.0,
+    "total_duration_seconds": 224.0
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "eval": "eval-1-greenfield-scaffold",
+  "run": "without_skill",
+  "assertions": [
+    {
+      "text": "apps/ contains web and api; packages/ exists",
+      "passed": true,
+      "evidence": "apps=iteration-1/eval-1-greenfield-scaffold/without_skill/outputs/apps web=iteration-1/eval-1-greenfield-scaffold/without_skill/outputs/apps/web api=iteration-1/eval-1-greenfield-scaffold/without_skill/outputs/apps/api packages=iteration-1/eval-1-greenfield-scaffold/without_skill/outputs/packages"
+    },
+    {
+      "text": "pnpm-workspace.yaml globs apps/* and packages/*",
+      "passed": true,
+      "evidence": "packages:\n  - \"apps/*\"\n  - \"packages/*\""
+    },
+    {
+      "text": "turbo.json build task with dependsOn ^build",
+      "passed": true,
+      "evidence": "{   \"$schema\": \"https://turbo.build/schema.json\",   \"tasks\": {     \"build\": {       \"dependsOn\": [\"^build\"],       \"inpu"
+    },
+    {
+      "text": "shared types package exists; no deep relative imports into packages",
+      "passed": false,
+      "evidence": "types_pkg=None deep_import=None"
+    },
+    {
+      "text": "per-app .env.example for web and api; no mixed root .env",
+      "passed": true,
+      "evidence": "web_env=[PosixPath('iteration-1/eval-1-greenfield-scaffold/without_skill/outputs/apps/web/.env.example')] api_env=[PosixPath('iteration-1/eval-1-greenfield-scaffold/without_skill/outputs/apps/api/.env.example')] root_env=False"
+    },
+    {
+      "text": "root package.json scripts delegate to turbo for dev/build/test",
+      "passed": false,
+      "evidence": "{\"dev\": \"turbo run dev\", \"build\": \"turbo run build\", \"typecheck\": \"turbo run typecheck\", \"db:generate\": \"pnpm --filter @dashboard/database db:generate"
+    },
+    {
+      "text": "docker-compose at root provides Postgres",
+      "passed": false,
+      "evidence": ""
+    }
+  ]
+}

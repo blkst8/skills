@@ -1,0 +1,6 @@
+# JS workspaces only. apps/api is a native Go module (go.mod) and is
+# deliberately NOT a pnpm workspace — it has no package.json. Cross-language
+# tasks are orchestrated by the root Makefile.
+packages:
+  - apps/web
+  - packages/*

@@ -1,0 +1,5 @@
+{
+  "name": "sideproject",
+  "private": true,
+  "packageManager": "pnpm@9.10.0"
+}

@@ -1,0 +1,6 @@
+[project]
+name = "sideproject-scraper"
+version = "0.0.0"
+description = "Data scraper for sideproject (added later)"
+requires-python = ">=3.12"
+dependencies = []

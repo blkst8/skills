@@ -1,0 +1,69 @@
+# The API is the source of truth for the contract between Go and React.
+# The Go handlers in apps/api implement these shapes; the frontend's TS
+# types are GENERATED from this file (`make generate`), never hand-written.
+# Keep the schemas in sync with the JSON tags in apps/api/internal/store.
+openapi: 3.1.0
+info:
+  title: Side Project API
+  version: 0.1.0
+servers:
+  - url: http://localhost:8080
+paths:
+  /healthz:
+    get:
+      operationId: health
+      responses:
+        "200":
+          description: API is up
+  /api/v1/users:
+    get:
+      operationId: listUsers
+      responses:
+        "200":
+          description: All users, newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+      responses:
+        "201":
+          description: The created user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Invalid request body
+components:
+  schemas:
+    User:
+      type: object
+      required: [id, email, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+    CreateUserRequest:
+      type: object
+      required: [email, name]
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: string

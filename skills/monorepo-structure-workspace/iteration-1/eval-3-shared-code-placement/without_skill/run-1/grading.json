@@ -1,0 +1,34 @@
+{
+  "expectations": [
+    {
+      "text": "Places the zod schema in a runtime shared package (e.g. packages/shared), distinguishing it from the type-only packages/types \u2014 with reasoning, not just a destination",
+      "passed": true,
+      "evidence": "Answer: new `packages/validation` package (runtime code kept out of the types-only packages/types) with reasoning that zod is runtime logic with a dependency; workspace:* wiring shown for both apps."
+    },
+    {
+      "text": "Rejects moving Prisma models into a shared package, keeping them in apps/api, and explains the coupling cost",
+      "passed": false,
+      "evidence": "Contradicts the expectation: answer recommends creating `packages/db` with the Prisma schema, generated client, and migrations ('Moving the Prisma schema/client into a shared package is a good idea'). Models no longer live in apps/api. Only caveat: don't import PrismaClient into the browser bundle."
+    },
+    {
+      "text": "Offers the DTO route as the sharing mechanism: expose user shapes via packages/types so the frontend gets types, not models",
+      "passed": false,
+      "evidence": "No DTO mapping route offered; frontend shares raw Prisma-generated types imported from `@your-org/db`. No packages/types DTO layer mentioned."
+    },
+    {
+      "text": "No packages/ui recommendation for a single frontend app, and the answer stays advice (no project scaffolding)",
+      "passed": true,
+      "evidence": "Answer: 'don't add a packages/ui \u2014 with exactly one frontend app, that would be premature'. Pure written advice; only answer.md produced."
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 2,
+    "total": 4,
+    "pass_rate": 0.5
+  },
+  "timing": {
+    "executor_duration_seconds": 44.2,
+    "total_duration_seconds": 44.2
+  }
+}

@@ -1,0 +1,21 @@
+# Node / pnpm
+node_modules/
+dist/
+*.tsbuildinfo
+.pnpm-store/
+
+# Go
+apps/api/bin/
+*.exe
+*.test
+*.out
+
+# Python
+__pycache__/
+.venv/
+*.egg-info/
+
+# Env / local
+.env
+.env.local
+.DS_Store

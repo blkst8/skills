@@ -1,0 +1,25 @@
+# Skill Benchmark: monorepo-structure
+
+**Model**: <model-name>
+**Date**: 2026-09-18T19:25:58Z
+**Evals**: 1, 2, 3, 4 (3 runs each per configuration)
+
+## Summary
+
+| Metric | With Skill | Without Skill | Delta |
+|--------|------------|---------------|-------|
+| Pass Rate | 100% ± 0% | 76% ± 21% | +0.24 |
+| Time | 266.2s ± 208.3s | 204.3s ± 122.3s | +61.9s |
+| Tokens | 0 ± 0 | 0 ± 0 | +0 |
+
+## Notes
+
+- Aggregate delta (+24pp: 100% vs 76%) is driven almost entirely by eval-3 and eval-1: eval-3 (placement Q&A) is the sharpest differentiator (4/4 vs 2/4), failing the baseline exactly on the two database-coupling assertions the skill spends Principle 1 and Principle 3 on.
+- Eval-2 (legacy restructure) is non-discriminating: both configurations scored 6/6. The assertions check outcomes any competent agent reaches (preserve logic, split env, wire pnpm+turbo). What the skill uniquely prescribes — feature-grouping INSIDE apps/api (modules/users/) vs the baseline's layer-grouping (src/routes/, src/models/, src/db.js, src/lib/) — has no assertion, so the structural difference the skill causes is invisible to the benchmark.
+- Eval-1 baseline created a packages/database package exporting the Prisma client — precisely the over-sharing pattern the skill's Principle 3 forbids. Eval-1 has no assertion checking 'no DB/ORM code in packages/', so this went ungraded; eval-2 has the check (leak=None) but eval-1 doesn't.
+- Scripted name-based checks are brittle: eval-1's 'shared types package' check initially failed the baseline because it globbed for packages/types specifically, while the baseline shared types via packages/shared — intent satisfied, name not. Corrected to pass; name-agnostic checks are needed.
+- Eval-4 assertion 'planned home for the python scraper' conflicts with the skill's own guidance: the with-skill run deliberately did NOT scaffold apps/scraper ('an empty app dir is premature') and documented the plan in prose, which a file-content grep can't see; the baseline's scaffolded tools/scraper passed the grep. Corrected in grading to credit the documented plan; the assertion should read 'documented or scaffolded home'.
+- Baseline eval-4 missed docker-compose entirely (no local Postgres provisioning) and wrote no web env file; with-skill provided both plus a Makefile with db-up/db-down targets. With-skill 6/6 vs 5/6 here is understated: the OpenAPI contract package (@repo/api-schema with a generate script) is a materially stronger sharing mechanism than the baseline's hand-mirrored Go structs with 'sync the json tags by convention' comments.
+- Timing: with-skill runs are slower on scaffold evals (eval-1: 539s vs 280s; eval-4: 224s vs 176s) — the cost of reading two reference files and producing more complete output (47 vs 28 files). On the restructure (eval-2: 268s vs 317s) and advice (eval-3: 34s vs 44s) runs the skill is faster or equal.
+- total_tokens was not delivered by the task notifications (null in all timing.json) — timing comparisons rest on wall-clock duration only.
+- Skill-followed evidence: all four with-skill runs explicitly read SKILL.md first, classified the request via its routing table, and read the correct reference file for their scenario (ts-stack, migration, polyglot) — the routing table in SKILL.md is doing real work.

@@ -1,0 +1,5 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+  # Go app (apps/api) is NOT a workspace package — it has no package.json.
+  # tools/scraper is Python; also not a pnpm workspace member.

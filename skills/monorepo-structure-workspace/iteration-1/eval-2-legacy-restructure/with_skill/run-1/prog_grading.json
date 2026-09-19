@@ -1,0 +1,36 @@
+{
+  "eval": "eval-2-legacy-restructure",
+  "run": "with_skill",
+  "assertions": [
+    {
+      "text": "no logic lost: all original functions/routes survive",
+      "passed": true,
+      "evidence": "all 12 symbol groups present"
+    },
+    {
+      "text": "UserDto defined once in a packages/ dir and referenced by apps",
+      "passed": true,
+      "evidence": "defs=1 in_packages=True"
+    },
+    {
+      "text": "root .env split into per-app env files; no mixed root .env",
+      "passed": true,
+      "evidence": "web_env=['iteration-1/eval-2-legacy-restructure/with_skill/outputs/apps/web/.env.example', 'iteration-1/eval-2-legacy-restructure/with_skill/outputs/apps/web/.env.local'] api_env=['iteration-1/eval-2-legacy-restructure/with_skill/outputs/apps/api/.env.example', 'iteration-1/eval-2-legacy-restructure"
+    },
+    {
+      "text": "database code (pg/Pool/SQL) stays inside apps/api, not in packages/",
+      "passed": true,
+      "evidence": "leak=None"
+    },
+    {
+      "text": "pnpm-workspace.yaml + turbo.json + root package.json present",
+      "passed": true,
+      "evidence": "ws=True turbo=True root_pkg=True"
+    },
+    {
+      "text": "original fixture untouched",
+      "passed": true,
+      "evidence": "19 entries, none modified"
+    }
+  ]
+}

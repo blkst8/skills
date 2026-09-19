@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.next/
+.turbo/
+*.tsbuildinfo
+
+# Environment — never commit real values (only .env.example files are tracked)
+.env
+.env.*
+!.env.example
+
+# Misc
+coverage/
+*.log
+.DS_Store

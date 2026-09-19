@@ -1,0 +1,49 @@
+{
+  "expectations": [
+    {
+      "text": "apps/ contains web and api; packages/ exists",
+      "passed": true,
+      "evidence": "apps=iteration-1/eval-1-greenfield-scaffold/with_skill/outputs/project/apps web=iteration-1/eval-1-greenfield-scaffold/with_skill/outputs/project/apps/web api=iteration-1/eval-1-greenfield-scaffold/with_skill/outputs/project/apps/api packages=iteration-1/eval-1-greenfield-scaffold/with_skill/outputs"
+    },
+    {
+      "text": "pnpm-workspace.yaml globs apps/* and packages/*",
+      "passed": true,
+      "evidence": "packages:\n  - \"apps/*\"\n  - \"packages/*\""
+    },
+    {
+      "text": "turbo.json build task with dependsOn ^build",
+      "passed": true,
+      "evidence": "{   \"$schema\": \"https://turbo.build/schema.json\",   \"tasks\": {     \"dev\": {       \"dependsOn\": [\"^build\"],       \"cache\""
+    },
+    {
+      "text": "shared types package exists; no deep relative imports into packages",
+      "passed": true,
+      "evidence": "types_pkg=iteration-1/eval-1-greenfield-scaffold/with_skill/outputs/project/packages/types/package.json deep_import=None"
+    },
+    {
+      "text": "per-app .env.example for web and api; no mixed root .env",
+      "passed": true,
+      "evidence": "web_env=[PosixPath('iteration-1/eval-1-greenfield-scaffold/with_skill/outputs/project/apps/web/.env.example')] api_env=[PosixPath('iteration-1/eval-1-greenfield-scaffold/with_skill/outputs/project/apps/api/.env.example')] root_env=False"
+    },
+    {
+      "text": "root package.json scripts delegate to turbo for dev/build/test",
+      "passed": true,
+      "evidence": "{\"dev\": \"turbo dev\", \"build\": \"turbo build\", \"test\": \"turbo test\", \"lint\": \"turbo lint\", \"format\": \"prettier --write .\"}"
+    },
+    {
+      "text": "docker-compose at root provides Postgres",
+      "passed": true,
+      "evidence": "services:\n  postgres:\n    image: postgres:16\n    environment:\n      POSTGRES_USER: dashboard\n      POSTGRES_PASSWORD: da"
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "executor_duration_seconds": 539.0,
+    "total_duration_seconds": 539.0
+  }
+}

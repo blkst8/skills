@@ -1,0 +1,13 @@
+{
+  "eval_id": 2,
+  "eval_name": "legacy-restructure",
+  "prompt": "Our project at skills/monorepo-structure-workspace/fixtures/legacy-app started as a single package with client/ and server/ folders, and it's grown into a mess: types duplicated between client and server, one giant .env at the root with both database secrets and the frontend API URL, and the server keeps its database models next to the express routes. Please restructure it into a proper monorepo (pnpm + turbo, apps/web + apps/api, shared packages where it makes sense). First copy the whole project directory into your working area and do the restructure there — don't modify the original. Don't lose any logic.",
+  "assertions": [
+    "No logic lost: all original functionality survives — express routes (list/create/login), UserModel CRUD, password hashing/verification (hashPassword/verifyPassword with salt), db connection, client App/api/formatDate/relativeTime all present in the restructured output",
+    "Duplicated UserDto types extracted: a single shared types package holds them, and both web and api sides import from it (no duplicated type definitions left in both apps)",
+    "Giant root .env split into per-app env files (web and api each get their own env file plus .env.example); no root-level .env with mixed frontend+backend secrets remains",
+    "Database code stays in the backend: user model and pg/Pool access live inside apps/api, not in any shared package",
+    "pnpm + turbo wiring present: pnpm-workspace.yaml, turbo.json, and a root package.json orchestrating apps and packages",
+    "Original fixture untouched: the fixture directory is byte-identical to its pre-run state"
+  ]
+}

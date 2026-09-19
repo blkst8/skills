@@ -1,0 +1,14 @@
+{
+  "name": "legacy-app",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "start": "turbo run start"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0"
+  }
+}

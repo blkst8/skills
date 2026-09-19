@@ -1,0 +1,13 @@
+{
+  "eval_id": 4,
+  "eval_name": "polyglot-scaffold",
+  "prompt": "starting a new side project: react frontend, go backend (chi router + pgx for postgres), and probably a small python data scraper later on. i want everything in one repo. i know pnpm workspaces for the js side but i'm not sure how the go part fits in — do i need to give the go app a package.json? can i share types between react and go? can you set up the repo structure?",
+  "assertions": [
+    "apps/api is a native Go module: go.mod exists inside apps/api and Go code isn't forced into JS conventions",
+    "No JS dependencies injected into the Go app: apps/api has either no package.json or a thin wrapper package.json with zero runtime dependencies",
+    "Cross-language type sharing answered via schemas/codegen (OpenAPI, protobuf, or generated types), not by pretending Go can import TS types",
+    "One canonical task orchestration story spans both languages: a Makefile or thin package.json wrappers — a single coherent command set, not two competing layers",
+    "Layout keeps apps/ (deployables) and packages/ (shared JS libs) separation, with a sensible planned home for the future python scraper (e.g. apps/scraper)",
+    "Per-app env files for web and api, and docker-compose.yml (or equivalent) at the root provides Postgres for local dev"
+  ]
+}

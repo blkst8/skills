@@ -1,0 +1,82 @@
+[
+  {
+    "query": "ok so we're starting the dashboard rewrite next month \u2014 next.js on the front, nest on the back, postgres. my lead wants everything in one repo but separately deployable. can you lay it out for us?",
+    "should_trigger": true
+  },
+  {
+    "query": "hey, our app has client/ and server/ folders in one package and types are copy-pasted between them constantly. someone suggested pnpm workspaces + turbo. can you restructure it?",
+    "should_trigger": true
+  },
+  {
+    "query": "i'm about to scaffold a new full-stack typescript project (react vite + fastify + prisma). how should i organize the repo so the frontend can share types with the backend instead of duplicating them?",
+    "should_trigger": true
+  },
+  {
+    "query": "we have a yarn workspaces repo with a CRA app and an express server. should we move to turborepo? also where should shared validation logic live?",
+    "should_trigger": true
+  },
+  {
+    "query": "please review our repo structure: apps/web, apps/api, packages/db with the prisma schema that we import straight into web, and one .env at the root with everything in it. feels wrong but i can't articulate why",
+    "should_trigger": true
+  },
+  {
+    "query": "new project \u2014 next 14 frontend plus a django REST backend, one repo. where does shared stuff go and where does docker-compose go?",
+    "should_trigger": true
+  },
+  {
+    "query": "my go api can't import the typescript types from packages/types. how do teams handle sharing DTOs between go and react? and do i need to give the go app a package.json to fit into pnpm workspaces?",
+    "should_trigger": true
+  },
+  {
+    "query": "we're taking a busy single-repo project (fastapi + vite frontend) and restructuring it into a proper monorepo this weekend. what's the safest order of operations so CI isn't broken Monday?",
+    "should_trigger": true
+  },
+  {
+    "query": "teammate wants to move all our prisma models into a shared package so the react app can import them directly instead of me writing DTOs. is that actually bad? use turborepo btw",
+    "should_trigger": true
+  },
+  {
+    "query": "starting an electron desktop app + web dashboard that share a design system, bun as package manager. plan the repo layout for me",
+    "should_trigger": true
+  },
+  {
+    "query": "add a dark mode toggle to our react app. it's at apps/web/src/App.tsx in our existing turborepo, nothing in packages/ depends on it",
+    "should_trigger": false
+  },
+  {
+    "query": "our ci is slow: turbo build takes 9 minutes on our pnpm monorepo. what are good remote caching options without breaking the bank?",
+    "should_trigger": false
+  },
+  {
+    "query": "pnpm install is failing with ERR_PNPM_PEER_DEP_ISSUES after a vite upgrade in apps/web \u2014 how do i resolve the peer conflicts?",
+    "should_trigger": false
+  },
+  {
+    "query": "our fastify api's docker image is 1.8GB. help me shrink it \u2014 the Dockerfile lives inside a pnpm workspace",
+    "should_trigger": false
+  },
+  {
+    "query": "write vitest tests for auth.service in apps/api/src/modules/auth, targeting 80% coverage",
+    "should_trigger": false
+  },
+  {
+    "query": "we're deciding monorepo vs polyrepo for a 40-engineer org. give me a real decision framework \u2014 tooling costs, code review boundaries, release trains",
+    "should_trigger": false
+  },
+  {
+    "query": "can you explain what an ORM actually does? keep seeing prisma/jpa discussions and have no project yet",
+    "should_trigger": false
+  },
+  {
+    "query": "i want to move my billing service repo into the reporting repo as a plain subfolder \u2014 both are python. how do i do the git history move safely?",
+    "should_trigger": false
+  },
+  {
+    "query": "set up semantic-release with changesets to version packages in our lerna monorepo",
+    "should_trigger": false
+  },
+  {
+    "query": "my go binary won't build in ci: 'cannot find package github.com/go-chi/chi/v5' \u2014 it's declared in apps/api/go.mod, what am i missing?",
+    "should_trigger": false
+  }
+]

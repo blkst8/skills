@@ -1,0 +1,17 @@
+# JS
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Go
+bin/
+
+# env files — commit only the .env.example files
+.env
+.env.*
+!.env.example
+
+# Python (for the scraper app when it lands)
+.venv/
+__pycache__/
+*.pyc

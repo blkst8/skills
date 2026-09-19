@@ -1,0 +1,11 @@
+{
+  "eval_id": 3,
+  "eval_name": "shared-code-placement",
+  "prompt": "we've got a pnpm monorepo (apps/web is React, apps/api is Fastify, there's already a packages/types). i just wrote a zod schema for the signup form that validates emails and password strength — both the web form and the api endpoint need it. also the api has all the prisma models in apps/api/src, and my teammate wants to move them into a shared package so the web app can import them directly. where should these two things go? fyi we have exactly one frontend app, no design system.",
+  "assertions": [
+    "Places the zod schema in a runtime shared package (e.g. packages/shared), distinguishing it from the type-only packages/types — with reasoning, not just a destination",
+    "Rejects moving Prisma models into a shared package, keeping them in apps/api, and explains the coupling cost (ORM/db concerns dragged into the frontend, deploy coupling)",
+    "Offers the DTO route as the sharing mechanism: expose user shapes via packages/types so the frontend gets types, not models",
+    "Gives a direct answer to the package.json question implicitly or explicitly: no packages/ui scaffolding recommended for a single frontend app, and the answer stays advice (no project scaffolding)"
+  ]
+}

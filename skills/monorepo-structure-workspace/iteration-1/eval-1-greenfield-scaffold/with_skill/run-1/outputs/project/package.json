@@ -1,0 +1,22 @@
+{
+  "name": "dashboard",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "test": "turbo test",
+    "lint": "turbo lint",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@repo/config": "workspace:*",
+    "prettier": "^3.3.2",
+    "turbo": "^2.0.11",
+    "typescript": "^5.5.3"
+  },
+  "prettier": "@repo/config/prettier"
+}

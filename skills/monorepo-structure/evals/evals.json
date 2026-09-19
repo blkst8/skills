@@ -1,0 +1,62 @@
+{
+  "skill_name": "monorepo-structure",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I'm kicking off a new project for my team — a dashboard app with a Next.js frontend and a NestJS backend, Postgres for storage. I want it as a monorepo from day one so the frontend can import types from the backend contract instead of us copy-pasting them like on our last project. Can you set it up? Just the structure and config, we'll build features later.",
+      "expected_output": "A scaffolded monorepo: apps/web (Next.js), apps/api (NestJS), packages/types (and likely shared/config), root pnpm-workspace.yaml, turbo.json, root package.json with turbo scripts, tsconfig.base.json, per-app .env.example files, docker-compose.yml for Postgres. Imports go through @repo/* package names.",
+      "files": [],
+      "assertions": [
+        "Layout separates deployable apps from shared packages: an apps/ directory contains both the web and api apps, and a packages/ directory exists",
+        "pnpm workspace wiring present: pnpm-workspace.yaml globs apps/* and packages/*",
+        "Turborepo configured with dependency-aware build order: turbo.json has a build task with dependsOn ^build",
+        "A shared types package exists and would be consumed via workspace package name (e.g. @repo/types), with no deep relative imports like ../../../packages/ in app code",
+        "Per-app environment files: apps/web and apps/api each have their own .env.example (or equivalent), and there is no single repo-wide .env with mixed secrets",
+        "Root package.json scripts delegate to turbo for dev/build/test",
+        "Postgres available for local dev via docker-compose.yml (or documented equivalent) at the root",
+        "No database/ORM code (Prisma client, pg Pool, SQL) is placed in packages/ — database code must stay in the backend app"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Our project at <FIXTURE_PATH> started as a single package with client/ and server/ folders, and it's grown into a mess: types duplicated between client and server, one giant .env at the root with both database secrets and the frontend API URL, and the server keeps its database models next to the express routes. Please restructure it into a proper monorepo (pnpm + turbo, apps/web + apps/api, shared packages where it makes sense). First copy the whole project directory into your working area and do the restructure there — don't modify the original. Don't lose any logic.",
+      "expected_output": "A restructured monorepo in the output dir: original code preserved and relocated (no lost logic), duplicated types extracted to packages/types with both sides importing from it, giant .env split into per-app env files with .env.example committed, database models kept inside apps/api (not shared), pnpm-workspace.yaml + turbo.json wired up.",
+      "files": ["fixtures/legacy-app/"],
+      "assertions": [
+        "No logic lost: all original functionality survives — express routes (list/create/login), UserModel CRUD, password hashing/verification (hashPassword/verifyPassword with salt), db connection, client App/api/formatDate/relativeTime all present in the restructured output",
+        "Duplicated UserDto types extracted: a single shared types package holds them, and both web and api sides import from it (no duplicated type definitions left in both apps)",
+        "Giant root .env split into per-app env files (web and api each get their own env file plus .env.example); no root-level .env with mixed frontend+backend secrets remains",
+        "Database code stays in the backend: user model and pg/Pool access live inside apps/api, not in any shared package",
+        "pnpm + turbo wiring present: pnpm-workspace.yaml, turbo.json, and a root package.json orchestrating apps and packages",
+        "Backend code grouped by feature, not technical layer: routes, model(s), and db for the same capability live under one feature/module directory in apps/api (e.g. modules/users/), not spread across routes/, models/, db/, lib/ layer directories",
+        "Original fixture untouched: the fixture directory is byte-identical to its pre-run state"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "we've got a pnpm monorepo (apps/web is React, apps/api is Fastify, there's already a packages/types). i just wrote a zod schema for the signup form that validates emails and password strength — both the web form and the api endpoint need it. also the api has all the prisma models in apps/api/src, and my teammate wants to move them into a shared package so the web app can import them directly. where should these two things go? fyi we have exactly one frontend app, no design system.",
+      "expected_output": "A written answer (no scaffolding): zod schema → packages/shared (runtime code, not packages/types); prisma models stay in apps/api — explain the coupling cost, offer DTOs via packages/types instead; no packages/ui recommendation for a single frontend. Should explain reasoning, not just name destinations.",
+      "files": [],
+      "assertions": [
+        "Places the zod schema in a runtime shared package (e.g. packages/shared), distinguishing it from the type-only packages/types — with reasoning, not just a destination",
+        "Rejects moving Prisma models into a shared package, keeping them in apps/api, and explains the coupling cost (ORM/db concerns dragged into the frontend, deploy coupling)",
+        "Offers the DTO route as the sharing mechanism: expose user shapes via packages/types so the frontend gets types, not models",
+        "Gives a direct answer to the package.json question implicitly or explicitly: no packages/ui scaffolding recommended for a single frontend app, and the answer stays advice (no project scaffolding)"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "starting a new side project: react frontend, go backend (chi router + pgx for postgres), and probably a small python data scraper later on. i want everything in one repo. i know pnpm workspaces for the js side but i'm not sure how the go part fits in — do i need to give the go app a package.json? can i share types between react and go? can you set up the repo structure?",
+      "expected_output": "A scaffolded polyglot monorepo: apps/web as a normal JS workspace citizen, apps/api as a native Go module (go.mod, no forced JS inside), an orchestration story (Makefile or thin package.json wrapper, one canonical set of commands), cross-language sharing via OpenAPI/schema-generated types rather than TS imports, per-app env files, docker-compose for Postgres.",
+      "files": [],
+      "assertions": [
+        "apps/api is a native Go module: go.mod exists inside apps/api and Go code isn't forced into JS conventions",
+        "No JS dependencies injected into the Go app: apps/api has either no package.json or a thin wrapper package.json with zero runtime dependencies",
+        "Cross-language type sharing answered via schemas/codegen (OpenAPI, protobuf, or generated types), not by pretending Go can import TS types",
+        "One canonical task orchestration story spans both languages: a Makefile or thin package.json wrappers — a single coherent command set, not two competing layers",
+        "Layout keeps apps/ (deployables) and packages/ (shared JS libs) separation, with a sensible planned home for the future python scraper (e.g. apps/scraper)",
+        "Per-app env files for web and api, and docker-compose.yml (or equivalent) at the root provides Postgres for local dev"
+      ]
+    }
+  ]
+}

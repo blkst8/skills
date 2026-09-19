@@ -1,0 +1,20 @@
+{
+  "name": "dashboard-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Team dashboard: Next.js frontend, NestJS backend, Postgres storage",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "db:generate": "pnpm --filter @dashboard/database db:generate",
+    "db:migrate": "pnpm --filter @dashboard/database db:migrate"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3"
+  }
+}

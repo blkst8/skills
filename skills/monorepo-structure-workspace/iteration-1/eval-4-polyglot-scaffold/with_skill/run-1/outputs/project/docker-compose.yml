@@ -1,0 +1,17 @@
+# Local infrastructure only (the apps themselves are not composed here).
+# Postgres for apps/api (pgx). Each app gets its own Dockerfile when it
+# needs to ship: apps/api/Dockerfile, apps/web builds to static files.
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: app
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:

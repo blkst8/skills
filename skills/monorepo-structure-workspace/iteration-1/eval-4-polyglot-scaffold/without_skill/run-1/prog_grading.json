@@ -1,0 +1,36 @@
+{
+  "eval": "eval-4-polyglot-scaffold",
+  "run": "without_skill",
+  "assertions": [
+    {
+      "text": "apps/api is a native Go module (go.mod)",
+      "passed": true,
+      "evidence": "go.mod=iteration-1/eval-4-polyglot-scaffold/without_skill/outputs/apps/api/go.mod"
+    },
+    {
+      "text": "no JS dependencies injected into the Go app",
+      "passed": true,
+      "evidence": "no package.json in api"
+    },
+    {
+      "text": "cross-language sharing via schemas/codegen (openapi/proto/generate)",
+      "passed": true,
+      "evidence": "match=iteration-1/eval-4-polyglot-scaffold/without_skill/outputs/apps/api/internal/apitypes/types.go"
+    },
+    {
+      "text": "one orchestration story: Makefile/justfile or thin package.json wrapper",
+      "passed": true,
+      "evidence": "makefile=iteration-1/eval-4-polyglot-scaffold/without_skill/outputs/Makefile wrapper=None"
+    },
+    {
+      "text": "apps/ + packages/ separation; planned home for python scraper",
+      "passed": true,
+      "evidence": "apps=iteration-1/eval-4-polyglot-scaffold/without_skill/outputs/apps packages=iteration-1/eval-4-polyglot-scaffold/without_skill/outputs/packages scraper=iteration-1/eval-4-polyglot-scaffold/without_skill/outputs/pnpm-workspace.yaml"
+    },
+    {
+      "text": "per-app env files + docker-compose Postgres at root",
+      "passed": false,
+      "evidence": "web_env=False api_env=True compose=False"
+    }
+  ]
+}
