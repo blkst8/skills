@@ -1,0 +1,93 @@
+{
+  "expectations": [
+    {
+      "text": "The output contains a Python program using Laya and the decision schema.",
+      "passed": true,
+      "evidence": "outputs/moderation_gate.py imports `Router` from `laya`, defines typed noul and choice questions in `QUESTIONS`, and invokes `router.predict(state, QUESTIONS)` for each state. The transcript records Laya 0.3.5 and the actual command used to run the program."
+    },
+    {
+      "text": "The program includes a crisp noul question and a choice question with an other option.",
+      "passed": true,
+      "evidence": "The `contains_prompt_injection` question has type `noul`, a direct yes/no decision criterion, and explicit true/false criteria. The `community_category` question has type `choice` with harassment, spam, and `other` criteria."
+    },
+    {
+      "text": "The program gates automatic action on confidence or probability and falls back to human review.",
+      "passed": true,
+      "evidence": "`choose_route` requires both category confidence >= 0.75 and selected-choice probability >= 0.75 before returning automatic `publish` or `remove`; missing answers, risky injection probability, unsupported categories, and failed gates return `human_review`. The observed report shows ordinary confidence 0.5438 and adversarial injection probability 0.9949 both routed to human review."
+    },
+    {
+      "text": "The report contains both ordinary and adversarial states, raw answers, and chosen routes from an actual run.",
+      "passed": true,
+      "evidence": "outputs/moderation_report.json contains cases named `ordinary` and `adversarial`, each with its input state, `raw_model_answers` (model, noul/choice answers, probabilities, confidence, usage, and Router metadata), and a `routing` result. Transcript lines 18-28 provide the execution command and state that the example completed; recorded raw Laya outputs and routes are internally consistent with the Python policy."
+    },
+    {
+      "text": "The program keeps credentials and endpoint configuration in environment variables.",
+      "passed": true,
+      "evidence": "The program reads `DECISION_LIBRARY`, `DECISION_MODEL`, `DECISION_BASE_URL`, and `DECISION_API_KEY` through `os.environ`; it only records booleans for model/endpoint/key presence. No credential or inference endpoint is embedded in the source, and the report records all three as unset."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": 0,
+    "files_created": [
+      "outputs/moderation_gate.py",
+      "outputs/moderation_report.json",
+      "transcript.md"
+    ],
+    "errors_encountered": 0,
+    "output_chars": 12035,
+    "transcript_chars": 3161
+  },
+  "timing": {
+    "executor_duration_seconds": 143.0,
+    "total_duration_seconds": 143.0
+  },
+  "claims": [
+    {
+      "claim": "The program was run with the installed Laya environment and automatically selected the English Laya checkpoint.",
+      "type": "process",
+      "verified": true,
+      "evidence": "The transcript records the Python/Laya execution command and selected model `laya-rl-agent` with Router model `english`; both report cases contain matching model and routing metadata."
+    },
+    {
+      "claim": "The ordinary and adversarial cases were both routed to human review by Python policy.",
+      "type": "factual",
+      "verified": true,
+      "evidence": "moderation_report.json records ordinary route `human_review` for confidence 0.5438 below 0.75 and adversarial route `human_review` for injection probability 0.9949 at or above 0.80."
+    },
+    {
+      "claim": "No API key or endpoint value was embedded in the program.",
+      "type": "quality",
+      "verified": true,
+      "evidence": "The source reads DECISION_BASE_URL and DECISION_API_KEY only through os.environ and emits booleans; no literal endpoint or credential value appears."
+    },
+    {
+      "claim": "Laya warned that confidence for affected buckets is uncalibrated.",
+      "type": "factual",
+      "verified": true,
+      "evidence": "The transcript records the RuntimeWarning from laya/router.py, but the warning itself was not captured in the report or stdout artifact."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [
+      "Laya warned that confidence from affected buckets is uncalibrated, so the confidence gate remains conservative but cannot make those model confidences calibrated."
+    ],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "reason": "Keep run artifacts only under the documented run-1 directory. Duplicate moderation outputs also exist at moderation-gate/with-skill/outputs, outside run-1, which creates an organization/collision risk when discovery scans by outputs directories."
+      }
+    ],
+    "overall": "All five expectations are directly supported by the script, observed report, and transcript. Future grading should avoid scanning the duplicate config-level outputs directory and should grade only the assigned run-1 artifacts."
+  }
+}

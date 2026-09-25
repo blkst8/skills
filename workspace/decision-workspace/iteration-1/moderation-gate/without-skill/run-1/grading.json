@@ -1,0 +1,67 @@
+{
+  "expectations": [
+    {
+      "text": "Python program uses Laya and decision schema.",
+      "passed": true,
+      "evidence": "outputs/moderation_gate.py:17 imports laya.Router, outputs/moderation_gate.py:19-21 selects Laya through DECISION_LIBRARY, and outputs/moderation_gate.py:136-148 constructs Router(), submits structured post state and the QUESTIONS decision schema through predict(), and records the raw result. outputs/report.json:2 reports library=laya and outputs/report.json:36-84 records an laya-rl-agent result with Router metadata."
+    },
+    {
+      "text": "Crisp noul and choice with other option.",
+      "passed": true,
+      "evidence": "outputs/moderation_gate.py:47-70 defines one yes/no noul question about explicit instruction-ignoring or hidden-prompt requests and one choice question whose criteria include benign, harassment, spam, prompt_injection, and the required other option. The same schema is preserved in the actual report at outputs/report.json:9-28."
+    },
+    {
+      "text": "Gates automatic action on confidence/probability and falls back to human review.",
+      "passed": true,
+      "evidence": "outputs/moderation_gate.py:73-133 implements the gate in Python: either answer below MIN_CONFIDENCE routes to human_review; prompt_injection with noul >= INJECTION_PROBABILITY routes to human_review; only confident benign output with noul <= SAFE_NOUL_MAX routes to publish. outputs/report.json:150-158 shows the actual adversarial state taking the probability-based human_review fallback."
+    },
+    {
+      "text": "Report contains ordinary and adversarial states, raw answers, and chosen routes from actual run.",
+      "passed": true,
+      "evidence": "outputs/report.json:31-94 contains the ordinary post, full raw Laya answers and Router metadata, and chosen route publish. outputs/report.json:96-159 contains the adversarial post, full raw Laya answers and Router metadata, and chosen route human_review. outputs/run.stdout.json:1-162 preserves the same actual program output."
+    },
+    {
+      "text": "Credentials/endpoints remain environment variables.",
+      "passed": true,
+      "evidence": "transcript.md:7-21 records the actual command with DECISION_LIBRARY=laya and no credential or endpoint literal. outputs/moderation_gate.py:5-8 states that credentials and optional endpoints are read only from DECISION_* environment variables, and outputs/moderation_gate.py:19-26 contains no API key or inference endpoint. The saved report confirms library=laya and automatic model selection at outputs/report.json:2-3."
+    }
+  ],
+  "summary": "Pass 5/5. The baseline implements and runs a Python Laya moderation gate with a crisp noul and an other-inclusive choice schema, confidence/probability-based automatic-action gating, human-review fallbacks, and preserved actual outputs for ordinary and adversarial states. No credentials or inference endpoints are hard-coded.",
+  "execution_metrics": {
+    "expectations_total": 5,
+    "expectations_passed": 5,
+    "expectations_failed": 0,
+    "pass_rate": 1.0,
+    "artifacts_present": true,
+    "actual_run_evidence": true,
+    "model_invocations": 2,
+    "successful_model_invocations": 2,
+    "input_tokens": 380,
+    "output_tokens": 0
+  },
+  "timing": {
+    "total_tokens": null,
+    "duration_ms": 188000,
+    "total_duration_seconds": 188.0,
+    "executor_duration_seconds": 188.0
+  },
+  "claims": [
+    {
+      "text": "The ordinary post was routed to publish.",
+      "observed": true,
+      "evidence": "outputs/report.json:85-94 records route=publish with benign confidence 0.6744, prompt-injection noul 0.0548, and benign probability 0.8732."
+    },
+    {
+      "text": "The adversarial post was routed to human review.",
+      "observed": true,
+      "evidence": "outputs/report.json:150-158 records route=human_review and the reason that the prompt-injection signal crossed the high-impact threshold; outputs/report.json:103-125 records noul 0.9961, choice prompt_injection, probability 0.9459, and confidence 0.8282."
+    },
+    {
+      "text": "Laya's Router automatically selected the English model for both states.",
+      "observed": true,
+      "evidence": "outputs/report.json:67-82 and 132-147 both record routing.model=english with reason English Latin text; outputs/report.json:3 states that DECISION_MODEL was omitted."
+    }
+  ],
+  "user_notes_summary": "The transcript records a successful exit-status-0 local Laya run and identifies the warning that some checkpoint temperatures were clamped, so affected confidence is uncalibrated. The saved report and captured stdout contain the same two completed cases. No artifact collision or run-organization issue is evident.",
+  "eval_feedback": "The actual run emitted a Laya confidence-calibration warning for one choice bucket. The observed values and confidence/probability gate remain inspectable, so this does not change the expectation result, but consumers should not interpret all reported confidence as calibrated."
+}

@@ -1,0 +1,346 @@
+{
+  "metadata": {
+    "skill_name": "decision",
+    "skill_path": "<path/to/skill>",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-09-25T13:58:12Z",
+    "evals_run": [
+      1,
+      2,
+      3
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 160.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Python program imports/invokes local Laya and uses decision schema.",
+          "passed": true,
+          "evidence": "outputs/support_triage.py:37-44 imports and constructs the installed local laya.Router; lines 89-101 pass the same state and questions to router.predict(state, QUESTIONS) and retain raw_result/answers in the portable decision shape. transcript.md:18 records execution with the local laya-test virtual environment and DECISION_LIBRARY=laya."
+        },
+        {
+          "text": "One choice, one score, one noul question for same ticket state.",
+          "passed": true,
+          "evidence": "outputs/support_triage.py:11-34 defines exactly one category question of type choice, one disruption question of type score, and one refund_requested question of type noul; lines 89-98 submit them together with one state containing the same ticket. outputs/observed_result.json:47-78 preserves that single request."
+        },
+        {
+          "text": "Routes in Python with low-confidence human-review fallback.",
+          "passed": true,
+          "evidence": "outputs/support_triage.py:47-78 implements route() in Python and sends category confidence below 0.60 to human_review. outputs/support_triage.py:101 invokes that function on the observed Laya answers; the successful observed state instead cleared the confidence gate and met the refund policy, producing billing_refund."
+        },
+        {
+          "text": "Contains observed Laya answers and routing result from actual run.",
+          "passed": true,
+          "evidence": "outputs/observed_result.json:79-142 contains the raw Laya result from Router-selected model laya-rl-agent, including choice billing, score 1.0414, and noul 0.8003. Lines 144-156 record the Python routing result billing_refund with its confidence/probability signals and thresholds. transcript.md:18-25 records the successful command, exit code 0, and model selection."
+        },
+        {
+          "text": "No hard-coded API keys or inference endpoints.",
+          "passed": true,
+          "evidence": "outputs/support_triage.py:37-44 and 89-104 configure only DECISION_LIBRARY and optional DECISION_MODEL before constructing local Laya Router; no API key, token, base URL, HTTP client, or inference endpoint is embedded. transcript.md:18-21 and 35 confirm that no model, credential, or endpoint was supplied, and run.stderr only records unauthenticated Hugging Face Hub downloads."
+        }
+      ],
+      "notes": [
+        "The transcript reports a successful local run in 40.91 seconds, while timing.json reports 160.0 seconds for the surrounding execution. The raw Laya answers and Python routing result are explicitly persisted and mutually consistent. No artifact collision or run-organization issue is evident."
+      ]
+    },
+    {
+      "eval_id": 2,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 143.0,
+        "tokens": 12035,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The output contains a Python program using Laya and the decision schema.",
+          "passed": true,
+          "evidence": "outputs/moderation_gate.py imports `Router` from `laya`, defines typed noul and choice questions in `QUESTIONS`, and invokes `router.predict(state, QUESTIONS)` for each state. The transcript records Laya 0.3.5 and the actual command used to run the program."
+        },
+        {
+          "text": "The program includes a crisp noul question and a choice question with an other option.",
+          "passed": true,
+          "evidence": "The `contains_prompt_injection` question has type `noul`, a direct yes/no decision criterion, and explicit true/false criteria. The `community_category` question has type `choice` with harassment, spam, and `other` criteria."
+        },
+        {
+          "text": "The program gates automatic action on confidence or probability and falls back to human review.",
+          "passed": true,
+          "evidence": "`choose_route` requires both category confidence >= 0.75 and selected-choice probability >= 0.75 before returning automatic `publish` or `remove`; missing answers, risky injection probability, unsupported categories, and failed gates return `human_review`. The observed report shows ordinary confidence 0.5438 and adversarial injection probability 0.9949 both routed to human review."
+        },
+        {
+          "text": "The report contains both ordinary and adversarial states, raw answers, and chosen routes from an actual run.",
+          "passed": true,
+          "evidence": "outputs/moderation_report.json contains cases named `ordinary` and `adversarial`, each with its input state, `raw_model_answers` (model, noul/choice answers, probabilities, confidence, usage, and Router metadata), and a `routing` result. Transcript lines 18-28 provide the execution command and state that the example completed; recorded raw Laya outputs and routes are internally consistent with the Python policy."
+        },
+        {
+          "text": "The program keeps credentials and endpoint configuration in environment variables.",
+          "passed": true,
+          "evidence": "The program reads `DECISION_LIBRARY`, `DECISION_MODEL`, `DECISION_BASE_URL`, and `DECISION_API_KEY` through `os.environ`; it only records booleans for model/endpoint/key presence. No credential or inference endpoint is embedded in the source, and the report records all three as unset."
+        }
+      ],
+      "notes": [
+        "Laya warned that confidence from affected buckets is uncalibrated, so the confidence gate remains conservative but cannot make those model confidences calibrated."
+      ]
+    },
+    {
+      "eval_id": 3,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 201.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": 1,
+          "text": "The output contains a Python program that processes three feedback states with the same choice, score, and noul questions.",
+          "passed": true,
+          "evidence": "outputs/batched_feedback.py defines one QUESTIONS dict with exactly three entries reused for every state: 'product_area' {\"type\": \"choice\", ...}, 'urgency' {\"type\": \"score\", ...}, and 'human_response_requested' {\"type\": \"noul\", ...} (lines 23-47). STATES contains exactly three records - 'checkout-001', 'onboarding-002', 'mobile-003' (lines 49-62). run_shared_schema_batch() iterates STATES and calls router.predict({\"feedback\": {\"text\": ...}}, QUESTIONS, **kwargs) with that same QUESTIONS object for each state (lines 65-82). outputs/observed_report.json confirms execution: states[] has exactly 3 entries, each carrying all three answer types, e.g. checkout-001 answers.product_area.type == 'choice' (choice 'checkout', probabilities checkout 0.9809), answers.urgency.type == 'score' (score 1.4975, three-level legend), answers.human_response_requested.type == 'noul' (noul 0.0763)."
+        },
+        {
+          "id": 2,
+          "text": "The program computes counts, rankings, or other arithmetic in Python rather than asking the model.",
+          "passed": true,
+          "evidence": "compute_python_aggregates() (lines 85-112) does all arithmetic in Python over the captured answers: collections.Counter over answer['product_area']['choice'] for area_counts, sorted(key=(-score, id)) for urgency_ranking_high_to_low, sum(scores)/len(scores) for urgency_average_score, and a >= 0.5 threshold count for human_response_count_at_0_5 plus the matching item-id list. No model call exists inside this function - only Counter, sorted, sum, len and float(). The emitted python_aggregates block in observed_report.json is arithmetically self-consistent with the raw answers: choices checkout/onboarding/mobile -> each count 1; scores 1.4975 + 0.8562 + 1.0934 = 3.4471 / 3 = 1.1490333333333334 (matches); ranking checkout-001 1.4975 > mobile-003 1.0934 > onboarding-002 0.8562 (matches); noul values 0.0763 / 0.2421 / 0.1331 are all below 0.5 so the count is 0 (matches)."
+        },
+        {
+          "id": 3,
+          "text": "The program uses a batched or shared-schema execution path rather than three unrelated ad-hoc question formats.",
+          "passed": true,
+          "evidence": "A single application-level batch function run_shared_schema_batch() (line 65) runs all three states in one process against one immutable QUESTIONS schema, and compute_python_aggregates() is then applied once to the whole record set. observed_report.json run metadata records application_batch=true, shared_schema=true, state_count=3, shared_question_ids=['human_response_requested','product_area','urgency'], backend_api='Router.predict'. There is exactly one question definition per type in the program - no per-state schema variants. The per-state call granularity is Laya's public Router.predict API (one state per forward pass); the batch semantics are provided at the application level and are documented explicitly in the docstring (lines 65-72) and in transcript.md step 3, which states this is the public API's state granularity rather than three unrelated question formats."
+        },
+        {
+          "id": 4,
+          "text": "The report contains observed answers for all three states and Python-computed aggregates.",
+          "passed": true,
+          "evidence": "outputs/observed_report.json (297 lines) holds three full state records with raw Laya answers: checkout-001 (product_area choice 'checkout' p=0.9809/conf 0.9172, urgency score 1.4975 with legend and per-bucket probabilities, human_response_requested noul 0.0763), onboarding-002 (choice 'onboarding' p=0.9586/conf 0.8439, score 0.8562, noul 0.2421), mobile-003 (choice 'mobile' p=0.7843/conf 0.4727, score 1.0934, noul 0.1331). Each record also carries real routing metadata (model 'english', reason 'English Latin text', repo 'convaiinnovations/laya', detection block) and usage.input_tokens (263/269/293), indicating a genuine inference run rather than authored values. The top-level python_aggregates block contains area_counts, human_response_count_at_0_5, human_response_item_ids_at_0_5, urgency_average_score and urgency_ranking_high_to_low with the per-item score and legend. transcript.md restates all three observed answers in a table and lists the four Python aggregates."
+        },
+        {
+          "id": 5,
+          "text": "The program uses DECISION_LIBRARY=laya and automatic Router model selection without hard-coded credentials or endpoints.",
+          "passed": true,
+          "evidence": "main() reads library = os.environ.get('DECISION_LIBRARY', 'laya') and raises RuntimeError if it is not 'laya' (lines 116-118). The model argument is left out of router.predict entirely unless DECISION_MODEL is set (lines 74-78: 'Leave model unset so Laya Router performs automatic selection'), and the transcript records the run was launched with 'env -u DECISION_MODEL DECISION_LIBRARY=laya'. observed_report.json run block confirms: decision_library='laya', router_model_selection='automatic', model_env=null, base_url_configured=false, api_key_configured=false. A case-insensitive grep of the script for api key/token/secret/http(s):// literals returns only line 133, 'bool(os.environ.get(\"DECISION_API_KEY\"))' - an environment read used for reporting, not a hard-coded credential. No endpoint URL is present anywhere in the script."
+        }
+      ],
+      "notes": [
+        "The eval prompt (eval_metadata.json eval_id 3) asked for a small batch decision report built on the installed Laya package: ask the same questions of three product-feedback items (a choice question for product area, a score question for urgency with distinct situation-based levels, and a noul question for an explicit human-response request), run all three states in one batched application-level run or clearly demonstrate the shared-schema batch API, compute counts and rankings in Python rather than asking the model, and save the script and observed report using DECISION_LIBRARY=laya with automatic Router selection. No additional user notes, corrections, or interventions were recorded for this run; transcript.md reports a single uninterrupted run and no self-corrections. The only noteworthy user-facing note from the run itself is the uncalibrated-checkpoint warning it discloses in transcript.md line 47."
+      ]
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 11.411,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Python program imports/invokes local Laya and uses decision schema.",
+          "passed": true,
+          "evidence": "outputs/ticket_triage.py:205-217 calls Router.predict(state, questions), and outputs/ticket_triage.py:231-243 imports laya.Router and constructs Router. The request and response in outputs/result.json:17-207 show the same state plus choice/score/noul question objects and the laya-rl-agent answer payload; config records remote_endpoint_configured=false."
+        },
+        {
+          "text": "One choice, one score, one noul question for same ticket state.",
+          "passed": true,
+          "evidence": "outputs/result.json:17-122 contains one shared ticket state and exactly three questions: category (choice), disruption (score), and refund_requested (noul). The saved raw response at outputs/result.json:127-185 contains the corresponding three observed answers."
+        },
+        {
+          "text": "Routes in Python with low-confidence human-review fallback.",
+          "passed": true,
+          "evidence": "outputs/ticket_triage.py:269-377 implements Python-only policy. Lines 298-309 route category confidence below 0.60 to human_review with automatic_action left false, while outputs/result.json:209-224 records this exact fallback being exercised at observed category confidence 0.1397."
+        },
+        {
+          "text": "Contains observed Laya answers and routing result from actual run.",
+          "passed": true,
+          "evidence": "outputs/result.json:126-207 records model laya-rl-agent answers: choice billing, score 1.2362, and noul 0.8421, plus Router-selected model english. outputs/result.json:209-230 records route human_review, queue support.triage, automatic_action=false, and a successful one-attempt call; outputs/run.log:3-12 independently contains the same observed values."
+        },
+        {
+          "text": "No hard-coded API keys or inference endpoints.",
+          "passed": true,
+          "evidence": "outputs/ticket_triage.py:74-108 reads DECISION_BASE_URL and DECISION_API_KEY from the environment, records only api_key_present, and rejects remote endpoint configuration for this local adapter. outputs/result.json:7-16 records api_key_present=false and remote_endpoint_configured=false. The only literal URL is the upstream Laya source/provenance URL at ticket_triage.py:38, not an inference endpoint, and no credential literal is present."
+        }
+      ],
+      "notes": [
+        "The transcript says the deterministic local command was run twice; the final outputs/result.json and outputs/run.log agree on the substantive answers and routing result, while their call elapsed value is 11.957 seconds. timing.json independently reports 11.411 seconds. No artifact collision or run-organization issue is evident."
+      ]
+    },
+    {
+      "eval_id": 2,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 188.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Python program uses Laya and decision schema.",
+          "passed": true,
+          "evidence": "outputs/moderation_gate.py:17 imports laya.Router, outputs/moderation_gate.py:19-21 selects Laya through DECISION_LIBRARY, and outputs/moderation_gate.py:136-148 constructs Router(), submits structured post state and the QUESTIONS decision schema through predict(), and records the raw result. outputs/report.json:2 reports library=laya and outputs/report.json:36-84 records an laya-rl-agent result with Router metadata."
+        },
+        {
+          "text": "Crisp noul and choice with other option.",
+          "passed": true,
+          "evidence": "outputs/moderation_gate.py:47-70 defines one yes/no noul question about explicit instruction-ignoring or hidden-prompt requests and one choice question whose criteria include benign, harassment, spam, prompt_injection, and the required other option. The same schema is preserved in the actual report at outputs/report.json:9-28."
+        },
+        {
+          "text": "Gates automatic action on confidence/probability and falls back to human review.",
+          "passed": true,
+          "evidence": "outputs/moderation_gate.py:73-133 implements the gate in Python: either answer below MIN_CONFIDENCE routes to human_review; prompt_injection with noul >= INJECTION_PROBABILITY routes to human_review; only confident benign output with noul <= SAFE_NOUL_MAX routes to publish. outputs/report.json:150-158 shows the actual adversarial state taking the probability-based human_review fallback."
+        },
+        {
+          "text": "Report contains ordinary and adversarial states, raw answers, and chosen routes from actual run.",
+          "passed": true,
+          "evidence": "outputs/report.json:31-94 contains the ordinary post, full raw Laya answers and Router metadata, and chosen route publish. outputs/report.json:96-159 contains the adversarial post, full raw Laya answers and Router metadata, and chosen route human_review. outputs/run.stdout.json:1-162 preserves the same actual program output."
+        },
+        {
+          "text": "Credentials/endpoints remain environment variables.",
+          "passed": true,
+          "evidence": "transcript.md:7-21 records the actual command with DECISION_LIBRARY=laya and no credential or endpoint literal. outputs/moderation_gate.py:5-8 states that credentials and optional endpoints are read only from DECISION_* environment variables, and outputs/moderation_gate.py:19-26 contains no API key or inference endpoint. The saved report confirms library=laya and automatic model selection at outputs/report.json:2-3."
+        }
+      ],
+      "notes": [
+        "The transcript records a successful exit-status-0 local Laya run and identifies the warning that some checkpoint temperatures were clamped, so affected confidence is uncalibrated. The saved report and captured stdout contain the same two completed cases. No artifact collision or run-organization issue is evident."
+      ]
+    },
+    {
+      "eval_id": 3,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 255.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Python program processes three feedback states with same choice/score/noul questions.",
+          "passed": true,
+          "evidence": "outputs/batched_feedback.py:15-39 defines one shared QUESTIONS schema containing exactly one choice question (product_area), one score question (urgency), and one noul question (human_response_requested). outputs/batched_feedback.py:41-45 defines three states, and outputs/batched_feedback.py:54-58 sends every state through that same QUESTIONS object."
+        },
+        {
+          "text": "Computes counts/rankings/arithmetic in Python.",
+          "passed": true,
+          "evidence": "outputs/batched_feedback.py:60-66 derives product-area counts with Counter, extracts human-response probabilities and urgency scores, and ranks the scores in Python. outputs/batched_feedback.py:84-90 emits those aggregates and computes the noul >= 0.5 count in Python. outputs/observed_report.json:2-24 contains the resulting observed-run aggregates."
+        },
+        {
+          "text": "Uses batched or shared-schema execution path.",
+          "passed": true,
+          "evidence": "outputs/batched_feedback.py:48-58 has one run_batch application path over all three states and reuses the same immutable QUESTIONS schema for each Router.predict call. outputs/observed_report.json:51-67 records application_batch=true, shared_schema=true, state_count=3, and the three shared question IDs. The three backend calls are the installed Router API's per-state granularity, not unrelated question formats."
+        },
+        {
+          "text": "Report contains observed answers for all three and Python aggregates.",
+          "passed": true,
+          "evidence": "outputs/observed_report.json:69-139 contains the complete observed choice/score/noul answers for checkout-001, :140-209 contains them for onboarding-002, and :210-280 contains them for mobile-003, including probabilities, confidence, and Router metadata. outputs/observed_report.json:2-24 contains Python-computed area counts, scores, ranking, human-response probabilities, and threshold count. outputs/run_stdout.txt preserves the same completed report."
+        },
+        {
+          "text": "Uses DECISION_LIBRARY=laya and automatic Router selection without hard-coded credentials/endpoints.",
+          "passed": true,
+          "evidence": "outputs/batched_feedback.py:13 imports laya; :49-52 reads DECISION_LIBRARY, requires the value laya, and constructs laya.Router(); :54-58 calls Router.predict without a model argument so Router selects automatically. transcript.md:5-20 records the actual command with DECISION_LIBRARY=laya, DECISION_MODEL unset, exit code 0, and no credential or endpoint in the source. outputs/observed_report.json:51-67 confirms decision_library=laya, model_env=null, router_model_selection=automatic, and credentials_or_endpoints_in_source=false."
+        }
+      ],
+      "notes": [
+        "The transcript records a successful exit-code-0 local Laya run and preserves captured stdout, stderr, source, and report evidence. Laya warned that confidence from an affected temperature bucket is uncalibrated. The run transcript points to the shared batched-feedback/outputs/baseline script rather than the run-1 copy; that shared outputs area also contains a separately named with-skill artifact, so discovery by outputs/ can cause an organization/collision risk, but grading here is restricted to the assigned run-1 directory."
+      ]
+    }
+  ],
+  "run_summary": {
+    "with-skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 168.0,
+        "stddev": 29.8161,
+        "min": 143.0,
+        "max": 201.0
+      },
+      "tokens": {
+        "mean": 4011.6667,
+        "stddev": 6948.4105,
+        "min": 0,
+        "max": 12035
+      }
+    },
+    "without-skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 151.4703,
+        "stddev": 125.8361,
+        "min": 11.411,
+        "max": 255.0
+      },
+      "tokens": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.00",
+      "time_seconds": "+16.5",
+      "tokens": "+4012"
+    }
+  },
+  "notes": [
+    "All six runs passed all five expectations, so this benchmark measures contract completion rather than skill differentiation; the prompts are too explicit for the baseline to fail.",
+    "With-skill and without-skill runs both exercised the installed Laya package and produced observed typed answers, so the comparison does not isolate the value of the skill's prose.",
+    "The with-skill timing mean was 168.0 seconds versus 151.5 seconds for baseline, but the values mix model startup, downloads/cache effects, and agent wall time; they are not a reliable performance comparison.",
+    "The moderation evaluation captured Laya's uncalibrated-confidence warning; the generated code still routed adversarial input to human review, but model confidence should not be treated as calibrated without evaluation.",
+    "The initial concurrent evaluation runs collided in shared output directories. Artifacts were separated into with-skill/run-1 and without-skill/run-1 before aggregation; future runs should provision distinct paths before spawning agents."
+  ]
+}

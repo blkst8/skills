@@ -1,0 +1,12 @@
+{
+  "eval_id": 3,
+  "eval_name": "batched-feedback",
+  "prompt": "Create a small batch decision report using the installed Laya package. Ask the same questions for three product feedback items: a choice question for product area, a score question for urgency with distinct situation-based levels, and a noul question for an explicit request for a human response. Put all three states in one batched application-level run or clearly demonstrate the shared-schema batch API, and compute any counts or rankings in Python rather than asking the model. Save the script and observed report, using DECISION_LIBRARY=laya and automatic Router selection.",
+  "assertions": [
+    "The output contains a Python program that processes three feedback states with the same choice, score, and noul questions.",
+    "The program computes counts, rankings, or other arithmetic in Python rather than asking the model.",
+    "The program uses a batched or shared-schema execution path rather than three unrelated ad-hoc question formats.",
+    "The report contains observed answers for all three states and Python-computed aggregates.",
+    "The program uses DECISION_LIBRARY=laya and automatic Router model selection without hard-coded credentials or endpoints."
+  ]
+}

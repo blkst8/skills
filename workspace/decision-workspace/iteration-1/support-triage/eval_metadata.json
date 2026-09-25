@@ -1,0 +1,12 @@
+{
+  "eval_id": 1,
+  "eval_name": "support-ticket-triage",
+  "prompt": "Build and run a small Python support-ticket triage program using the installed Laya package in /home/blkst8/src/github/blkst8/scripts/laya-test/. Use the decision skill's portable schema and environment configuration with DECISION_LIBRARY=laya and automatic Laya Router model selection. The program should accept a ticket, ask one choice question for category, one score question for disruption, and one noul question for an explicit refund request, then route in Python with a low-confidence human fallback. Save the program, run it on a duplicate-charge ticket, and save the observed JSON result and routing decision. Do not hard-code credentials or model endpoints.",
+  "assertions": [
+    "The output contains a Python program that imports or invokes the local Laya package and uses the decision schema.",
+    "The program includes one choice, one score, and one noul question for the same ticket state.",
+    "The program routes in Python and has a low-confidence human-review fallback.",
+    "The output contains observed Laya answers and a routing result from an actual run using the installed Laya environment.",
+    "The program does not hard-code API keys or inference endpoints."
+  ]
+}

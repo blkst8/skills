@@ -1,0 +1,44 @@
+{
+  "skill_name": "decision",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Build and run a small Python support-ticket triage program using the installed Laya package in /home/blkst8/src/github/blkst8/scripts/laya-test/. Use the decision skill's portable schema and environment configuration with DECISION_LIBRARY=laya and automatic Laya Router model selection. The program should accept a ticket, ask one choice question for category, one score question for disruption, and one noul question for an explicit refund request, then route in Python with a low-confidence human fallback. Save the program, run it on a duplicate-charge ticket, and save the observed JSON result and routing decision. Do not hard-code credentials or model endpoints.",
+      "expected_output": "A runnable Python program plus captured output showing the Laya answers, probabilities/confidence where available, and Python routing policy.",
+      "files": [],
+      "expectations": [
+        "The output contains a Python program that imports or invokes the local Laya package and uses the decision schema.",
+        "The program includes one choice, one score, and one noul question for the same ticket state.",
+        "The program routes in Python and has a low-confidence human-review fallback.",
+        "The output contains observed Laya answers and a routing result from an actual run using the installed Laya environment.",
+        "The program does not hard-code API keys or inference endpoints."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Using the decision skill, write and run a moderation gate example with the installed Laya environment. The state will contain an ordinary post and an adversarial post containing prompt-injection text. Use a crisp noul question, a choice question with an other option, and confidence/probability-gated Python routing with a human-review fallback. Save the script and a report containing both inputs, raw model answers, and the chosen routes. Keep API keys and endpoint settings in environment variables.",
+      "expected_output": "A runnable moderation example demonstrating bounded questions, safe fallback routing, and captured results for ordinary and adversarial states.",
+      "files": [],
+      "expectations": [
+        "The output contains a Python program using Laya and the decision schema.",
+        "The program includes a crisp noul question and a choice question with an other option.",
+        "The program gates automatic action on confidence or probability and falls back to human review.",
+        "The report contains both ordinary and adversarial states, raw answers, and chosen routes from an actual run.",
+        "The program keeps credentials and endpoint configuration in environment variables."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Create a small batch decision report using the installed Laya package. Ask the same questions for three product feedback items: a choice question for product area, a score question for urgency with distinct situation-based levels, and a noul question for an explicit request for a human response. Put all three states in one batched application-level run or clearly demonstrate the shared-schema batch API, and compute any counts or rankings in Python rather than asking the model. Save the script and observed report, using DECISION_LIBRARY=laya and automatic Router selection.",
+      "expected_output": "A batch-oriented decision report with three states, typed answers, Python-computed aggregates, and no model-requested arithmetic or invented prose.",
+      "files": [],
+      "expectations": [
+        "The output contains a Python program that processes three feedback states with the same choice, score, and noul questions.",
+        "The program computes counts, rankings, or other arithmetic in Python rather than asking the model.",
+        "The program uses a batched or shared-schema execution path rather than three unrelated ad-hoc question formats.",
+        "The report contains observed answers for all three states and Python-computed aggregates.",
+        "The program uses DECISION_LIBRARY=laya and automatic Router model selection without hard-coded credentials or endpoints."
+      ]
+    }
+  ]
+}

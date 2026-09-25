@@ -1,0 +1,134 @@
+{
+  "eval_id": 3,
+  "eval_name": "batched-feedback",
+  "variant": "with-skill",
+  "run": "run-1",
+  "run_dir": "skills/decision-workspace/iteration-1/batched-feedback/with-skill/run-1",
+  "expectations": [
+    {
+      "id": 1,
+      "text": "The output contains a Python program that processes three feedback states with the same choice, score, and noul questions.",
+      "passed": true,
+      "evidence": "outputs/batched_feedback.py defines one QUESTIONS dict with exactly three entries reused for every state: 'product_area' {\"type\": \"choice\", ...}, 'urgency' {\"type\": \"score\", ...}, and 'human_response_requested' {\"type\": \"noul\", ...} (lines 23-47). STATES contains exactly three records - 'checkout-001', 'onboarding-002', 'mobile-003' (lines 49-62). run_shared_schema_batch() iterates STATES and calls router.predict({\"feedback\": {\"text\": ...}}, QUESTIONS, **kwargs) with that same QUESTIONS object for each state (lines 65-82). outputs/observed_report.json confirms execution: states[] has exactly 3 entries, each carrying all three answer types, e.g. checkout-001 answers.product_area.type == 'choice' (choice 'checkout', probabilities checkout 0.9809), answers.urgency.type == 'score' (score 1.4975, three-level legend), answers.human_response_requested.type == 'noul' (noul 0.0763)."
+    },
+    {
+      "id": 2,
+      "text": "The program computes counts, rankings, or other arithmetic in Python rather than asking the model.",
+      "passed": true,
+      "evidence": "compute_python_aggregates() (lines 85-112) does all arithmetic in Python over the captured answers: collections.Counter over answer['product_area']['choice'] for area_counts, sorted(key=(-score, id)) for urgency_ranking_high_to_low, sum(scores)/len(scores) for urgency_average_score, and a >= 0.5 threshold count for human_response_count_at_0_5 plus the matching item-id list. No model call exists inside this function - only Counter, sorted, sum, len and float(). The emitted python_aggregates block in observed_report.json is arithmetically self-consistent with the raw answers: choices checkout/onboarding/mobile -> each count 1; scores 1.4975 + 0.8562 + 1.0934 = 3.4471 / 3 = 1.1490333333333334 (matches); ranking checkout-001 1.4975 > mobile-003 1.0934 > onboarding-002 0.8562 (matches); noul values 0.0763 / 0.2421 / 0.1331 are all below 0.5 so the count is 0 (matches)."
+    },
+    {
+      "id": 3,
+      "text": "The program uses a batched or shared-schema execution path rather than three unrelated ad-hoc question formats.",
+      "passed": true,
+      "evidence": "A single application-level batch function run_shared_schema_batch() (line 65) runs all three states in one process against one immutable QUESTIONS schema, and compute_python_aggregates() is then applied once to the whole record set. observed_report.json run metadata records application_batch=true, shared_schema=true, state_count=3, shared_question_ids=['human_response_requested','product_area','urgency'], backend_api='Router.predict'. There is exactly one question definition per type in the program - no per-state schema variants. The per-state call granularity is Laya's public Router.predict API (one state per forward pass); the batch semantics are provided at the application level and are documented explicitly in the docstring (lines 65-72) and in transcript.md step 3, which states this is the public API's state granularity rather than three unrelated question formats."
+    },
+    {
+      "id": 4,
+      "text": "The report contains observed answers for all three states and Python-computed aggregates.",
+      "passed": true,
+      "evidence": "outputs/observed_report.json (297 lines) holds three full state records with raw Laya answers: checkout-001 (product_area choice 'checkout' p=0.9809/conf 0.9172, urgency score 1.4975 with legend and per-bucket probabilities, human_response_requested noul 0.0763), onboarding-002 (choice 'onboarding' p=0.9586/conf 0.8439, score 0.8562, noul 0.2421), mobile-003 (choice 'mobile' p=0.7843/conf 0.4727, score 1.0934, noul 0.1331). Each record also carries real routing metadata (model 'english', reason 'English Latin text', repo 'convaiinnovations/laya', detection block) and usage.input_tokens (263/269/293), indicating a genuine inference run rather than authored values. The top-level python_aggregates block contains area_counts, human_response_count_at_0_5, human_response_item_ids_at_0_5, urgency_average_score and urgency_ranking_high_to_low with the per-item score and legend. transcript.md restates all three observed answers in a table and lists the four Python aggregates."
+    },
+    {
+      "id": 5,
+      "text": "The program uses DECISION_LIBRARY=laya and automatic Router model selection without hard-coded credentials or endpoints.",
+      "passed": true,
+      "evidence": "main() reads library = os.environ.get('DECISION_LIBRARY', 'laya') and raises RuntimeError if it is not 'laya' (lines 116-118). The model argument is left out of router.predict entirely unless DECISION_MODEL is set (lines 74-78: 'Leave model unset so Laya Router performs automatic selection'), and the transcript records the run was launched with 'env -u DECISION_MODEL DECISION_LIBRARY=laya'. observed_report.json run block confirms: decision_library='laya', router_model_selection='automatic', model_env=null, base_url_configured=false, api_key_configured=false. A case-insensitive grep of the script for api key/token/secret/http(s):// literals returns only line 133, 'bool(os.environ.get(\"DECISION_API_KEY\"))' - an environment read used for reporting, not a hard-coded credential. No endpoint URL is present anywhere in the script."
+    }
+  ],
+  "summary": "All 5 expectations passed: 5/5 (100%). The run delivers a runnable Python program (outputs/batched_feedback.py) that drives the installed local Laya Router over exactly three product-feedback states using one shared schema of one choice question (product_area), one score question (urgency, with three situation-based levels) and one noul question (human_response_requested), performs every count, average and ranking in Python (Counter/sorted/sum), and writes an observed report with real per-state answers, routing metadata and Python aggregates. Credentials and endpoints stay in environment variables; DECISION_LIBRARY=laya is enforced and Router model selection is left automatic. No expectation failed. One organization issue is worth flagging and did not change any grade: the with-skill run directory is byte-identical to a duplicated copy of itself sitting at the eval root (skills/decision-workspace/iteration-1/batched-feedback/outputs/{batched_feedback.py,observed_report.json} have the same md5 as with-skill/run-1/outputs/*, and batched-feedback/transcript.md has the same md5 as with-skill/run-1/transcript.md), and that stray outputs/ tree additionally contains an unrelated baseline/ subdirectory plus the without-skill run. Because the duplicate sits at the eval root, transcript.md line 5 claims the assigned run directory was 'skills/decision-workspace/iteration-1/batched-feedback/' and line 23 quotes a path with a doubled segment ('skills/skills/decision-workspace/...'), so the transcript's stated paths do not match this run directory. The graded artifacts in with-skill/run-1 are complete and self-consistent regardless.",
+  "execution_metrics": {
+    "artifacts_present": true,
+    "required_artifacts": [
+      "outputs/batched_feedback.py",
+      "outputs/observed_report.json",
+      "transcript.md",
+      "timing.json"
+    ],
+    "missing_artifacts": [],
+    "extra_artifacts": [],
+    "python_script_lines": 154,
+    "states_defined": 3,
+    "states_observed": 3,
+    "question_types": {
+      "choice": 1,
+      "score": 1,
+      "noul": 1
+    },
+    "shared_schema": true,
+    "schema_variants": 1,
+    "model_invocations": 3,
+    "aggregation_computed_in_python": true,
+    "aggregate_outputs": [
+      "area_counts",
+      "human_response_count_at_0_5",
+      "human_response_item_ids_at_0_5",
+      "urgency_average_score",
+      "urgency_ranking_high_to_low"
+    ],
+    "aggregates_verified_against_raw_answers": true,
+    "routing_model_selected": "english",
+    "routing_selection_mode": "automatic",
+    "decision_library": "laya",
+    "interpreter": "/home/blkst8/src/github/blkst8/scripts/laya-test/.venv/bin/python",
+    "python_version": "3.12.3",
+    "hardcoded_credentials_found": 0,
+    "hardcoded_endpoints_found": 0,
+    "total_input_tokens_observed": 825,
+    "expectations_total": 5,
+    "expectations_passed": 5,
+    "expectations_failed": 0,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "total_tokens": null,
+    "duration_ms": 201000,
+    "total_duration_seconds": 201.0,
+    "executor_duration_seconds": 201.0,
+    "source": "timing.json"
+  },
+  "claims": [
+    {
+      "claim": "One shared portable question schema with exactly one choice, one score, and one noul question was defined and reused for all three states in one application-level batch function.",
+      "verified": true,
+      "evidence": "batched_feedback.py lines 23-47 (single QUESTIONS dict) and lines 65-82 (same QUESTIONS passed to every router.predict call); observed_report.json run.shared_schema=true and shared_question_ids listing all three ids."
+    },
+    {
+      "claim": "DECISION_LIBRARY=laya was used and DECISION_MODEL was explicitly unset so Router.predict omitted the model argument and the installed Router selected 'english' automatically (reason: 'English Latin text').",
+      "verified": true,
+      "evidence": "transcript.md lines 8-9 and the recorded command 'env -u DECISION_MODEL DECISION_LIBRARY=laya ./.venv/bin/python ...'; observed_report.json run.model_env=null, run.router_model_selection='automatic', run.decision_library='laya'; all three states carry routing.model='english' with reason 'English Latin text' and model 'laya-rl-agent'."
+    },
+    {
+      "claim": "DECISION_BASE_URL and DECISION_API_KEY were not set and no credential or endpoint was embedded in the script.",
+      "verified": true,
+      "evidence": "observed_report.json run.base_url_configured=false and run.api_key_configured=false; grep of the script for key/token/secret/url literals yields only the DECISION_API_KEY environment read at line 133."
+    },
+    {
+      "claim": "Area counts, human-request count, average urgency, and urgency ranking were computed in Python after all model answers were captured.",
+      "verified": true,
+      "evidence": "compute_python_aggregates() lines 85-112; python_aggregates block in observed_report.json matches the raw answers recomputed by hand (avg 3.4471/3 = 1.1490333333333334; ranking 1.4975 > 1.0934 > 0.8562; all three noul values < 0.5 so count 0)."
+    },
+    {
+      "claim": "The run completed successfully and produced all three records, with observed answers preserved even where they differ from the apparent intent of the state; no answer was corrected or invented.",
+      "verified": true,
+      "evidence": "observed_report.json states[] contains three complete records; the mobile-003 text explicitly asks for a phone call yet the observed noul is 0.1331 (below the 0.5 human-response threshold), and the report records that low value rather than overriding it, consistent with the claim."
+    },
+    {
+      "claim": "The installed package emitted a runtime warning that one checkpoint bucket has an out-of-range temperature and that affected confidence values are uncalibrated, and this warning did not prevent execution.",
+      "verified": false,
+      "evidence": "Not independently verifiable from this run directory: with-skill/run-1 contains no captured run_stdout.txt or run_stderr.txt (unlike without-skill/run-1/outputs, which has both). The run's own artifacts are internally consistent with the claim - execution clearly produced answers - but the warning text itself is only asserted in transcript.md line 47. Note the observed urgency confidence values are indeed low (0.2938 / 0.2931 / 0.5433), which is consistent with, but not proof of, the stated calibration warning."
+    },
+    {
+      "claim": "Assigned run directory: skills/decision-workspace/iteration-1/batched-feedback/ (transcript.md line 5), with the script invoked from .../skills/skills/decision-workspace/iteration-1/batched-feedback/outputs/batched_feedback.py (line 23).",
+      "verified": false,
+      "evidence": "The graded run directory is with-skill/run-1. batched-feedback/outputs/batched_feedback.py and batched-feedback/outputs/observed_report.json are byte-identical duplicates of with-skill/run-1/outputs/* (md5 4f5c3d6c... and 3eaaee12...), and batched-feedback/transcript.md is an identical duplicate of with-skill/run-1/transcript.md (md5 9a2921a9...). The quoted path also contains a doubled 'skills/skills' segment. The transcripts' stated locations do not match the directory the artifacts were graded from; a copy step evidently fanned the run out to the eval root."
+    }
+  ],
+  "user_notes_summary": "The eval prompt (eval_metadata.json eval_id 3) asked for a small batch decision report built on the installed Laya package: ask the same questions of three product-feedback items (a choice question for product area, a score question for urgency with distinct situation-based levels, and a noul question for an explicit human-response request), run all three states in one batched application-level run or clearly demonstrate the shared-schema batch API, compute counts and rankings in Python rather than asking the model, and save the script and observed report using DECISION_LIBRARY=laya with automatic Router selection. No additional user notes, corrections, or interventions were recorded for this run; transcript.md reports a single uninterrupted run and no self-corrections. The only noteworthy user-facing note from the run itself is the uncalibrated-checkpoint warning it discloses in transcript.md line 47.",
+  "eval_feedback": "Strong, honest run - 5/5 with no expectation failures, and nothing was faked. What it did well: one immutable QUESTIONS schema provably reused for all three states (the code makes the shared-schema claim checkable rather than rhetorical); every aggregate delegated to Python with no model involvement, and the emitted numbers reconcile exactly with the raw answers; the automatic-Router-selection requirement satisfied by genuinely leaving DECISION_MODEL unset and recording the resolved 'english' routing with its reason; and a candid disclosure that the mobile-003 text asks for a phone call while the observed noul came back 0.1331 - it reported the discrepancy instead of quietly correcting the answer, which is exactly the right call for an observed-answers report. Two organizational defects, neither of which changed any grade: (1) the run is duplicated at the eval root - batched-feedback/outputs/* and batched-feedback/transcript.md are byte-identical to with-skill/run-1/*, and that stray tree also holds an unrelated baseline/ subdirectory, so the eval root mixes a stale with-skill copy with the without-skill run; the transcript compounds this by naming the eval root as the 'assigned run directory' and quoting a doubled 'skills/skills/...' path that does not exist as written. The run harness should place outputs only under <eval>/<variant>/run-1/ and have agents record the run-1 path, not the eval root. (2) This run captured no run_stdout.txt/run_stderr.txt while the without-skill run did, so the transcript's checkpoint-temperature calibration warning is unverifiable here; capturing both streams for every variant would let the grader confirm or drop such claims. Recommendation for the next iteration: keep the one-shared-schema structure and the reconcile-the-arithmetic self-check, and add a stdout/stderr capture so runtime warnings become checkable evidence.",
+  "notes": {
+    "grading_scope": "Observable evidence only, read from transcript.md, timing.json and outputs/ in this run directory. No source skill, eval definition, or run output was modified; the re-run script was deliberately not executed because it would overwrite outputs/observed_report.json.",
+    "artifact_collision": "skills/decision-workspace/iteration-1/batched-feedback/outputs/{batched_feedback.py,observed_report.json} are byte-identical to this run's outputs (md5 4f5c3d6cf49bbd879b1147c30c76b8cc / 3eaaee122d9dfe4650c4a87ab81bd24e), and batched-feedback/transcript.md is byte-identical to this run's transcript.md (md5 9a2921a90d03cd0b03586c17a9cb37e3). The stray tree also contains an unrelated baseline/ directory and duplicates the without-skill run's stdout/stderr. Grading used only with-skill/run-1/; the duplication is reported, not acted upon.",
+    "self_consistency_note": "No contradictions were found between transcript.md, batched_feedback.py and observed_report.json within this run directory; every number in the transcript table matches the JSON."
+  }
+}

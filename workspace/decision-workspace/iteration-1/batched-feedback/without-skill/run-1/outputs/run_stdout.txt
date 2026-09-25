@@ -1,0 +1,281 @@
+{
+  "python_aggregates": {
+    "calculation_note": "All counts, scores, thresholds, and rankings are computed in Python from observed model answers.",
+    "human_response_count_at_noul_0_5": 0,
+    "human_response_probabilities": {
+      "checkout-001": 0.0763,
+      "mobile-003": 0.1331,
+      "onboarding-002": 0.2421
+    },
+    "product_area_counts": {
+      "checkout": 1,
+      "mobile": 1,
+      "onboarding": 1
+    },
+    "urgency_ranking_high_to_low": [
+      "checkout-001",
+      "mobile-003",
+      "onboarding-002"
+    ],
+    "urgency_scores": {
+      "checkout-001": 1.4975,
+      "mobile-003": 1.0934,
+      "onboarding-002": 0.8562
+    }
+  },
+  "questions": {
+    "human_response_requested": {
+      "instructions": "Does `feedback.text` explicitly request a response from a human or a person?",
+      "type": "noul"
+    },
+    "product_area": {
+      "criteria": {
+        "checkout": "Payments, orders, carts, or checkout flow",
+        "mobile": "Mobile app behavior, mobile notifications, or mobile performance",
+        "onboarding": "Account setup, first-run experience, or learning the product",
+        "other": "A product area not covered by the options above"
+      },
+      "instructions": "Which product area best describes the main request in `feedback.text`?",
+      "type": "choice"
+    },
+    "urgency": {
+      "criteria": [
+        "No time pressure; the request can wait for a normal release cycle",
+        "A near-term deadline or a blocked workaround requires prompt attention",
+        "A critical deadline or an active business blocker requires immediate attention"
+      ],
+      "instructions": "How urgent is the situation described in `feedback.text`?",
+      "type": "score"
+    }
+  },
+  "run": {
+    "application_batch": true,
+    "backend_api": "Router.predict (all questions in one forward pass per state)",
+    "credentials_or_endpoints_in_source": false,
+    "decision_library": "laya",
+    "interpreter": "/home/blkst8/src/github/blkst8/scripts/laya-test/.venv/bin/python",
+    "laya_version": "0.3.5",
+    "model_env": null,
+    "python": "3.12.3",
+    "router_model_selection": "automatic",
+    "shared_question_ids": [
+      "product_area",
+      "urgency",
+      "human_response_requested"
+    ],
+    "shared_schema": true,
+    "state_count": 3
+  },
+  "states": [
+    {
+      "id": "checkout-001",
+      "observed": {
+        "answers": {
+          "human_response_requested": {
+            "action": {
+              "act_probability": 1.0
+            },
+            "confidence": 0.9237,
+            "noul": 0.0763,
+            "type": "noul"
+          },
+          "product_area": {
+            "action": {
+              "act_probability": 1.0
+            },
+            "choice": "checkout",
+            "confidence": 0.9172,
+            "probabilities": {
+              "checkout": 0.9809,
+              "mobile": 0.0061,
+              "onboarding": 0.0047,
+              "other": 0.0083
+            },
+            "type": "choice"
+          },
+          "urgency": {
+            "action": {
+              "act_probability": 1.0
+            },
+            "confidence": 0.2938,
+            "legend": {
+              "0": "No time pressure; the request can wait for a normal release cycle",
+              "1": "A near-term deadline or a blocked workaround requires prompt attention",
+              "2": "A critical deadline or an active business blocker requires immediate attention"
+            },
+            "probabilities": {
+              "0": 0.02,
+              "1": 0.4625,
+              "2": 0.5175
+            },
+            "score": 1.4975,
+            "type": "score"
+          }
+        },
+        "model": "laya-rl-agent",
+        "routing": {
+          "detection": {
+            "diacritic_rate": 0.0,
+            "is_english": true,
+            "language": "en",
+            "language_undecided": false,
+            "non_latin_fraction": 0.0,
+            "script": "latin",
+            "script_profile": {
+              "latin": 1.0
+            }
+          },
+          "model": "english",
+          "reason": "English Latin text",
+          "repo": "convaiinnovations/laya",
+          "workflow": null
+        },
+        "usage": {
+          "input_tokens": 263,
+          "output_tokens": 0
+        }
+      },
+      "text": "Checkout rejects valid cards during the Black Friday sale. We cannot take orders today."
+    },
+    {
+      "id": "onboarding-002",
+      "observed": {
+        "answers": {
+          "human_response_requested": {
+            "action": {
+              "act_probability": 1.0
+            },
+            "confidence": 0.7579,
+            "noul": 0.2421,
+            "type": "noul"
+          },
+          "product_area": {
+            "action": {
+              "act_probability": 1.0
+            },
+            "choice": "onboarding",
+            "confidence": 0.8439,
+            "probabilities": {
+              "checkout": 0.0089,
+              "mobile": 0.0172,
+              "onboarding": 0.9586,
+              "other": 0.0153
+            },
+            "type": "choice"
+          },
+          "urgency": {
+            "action": {
+              "act_probability": 1.0
+            },
+            "confidence": 0.2931,
+            "legend": {
+              "0": "No time pressure; the request can wait for a normal release cycle",
+              "1": "A near-term deadline or a blocked workaround requires prompt attention",
+              "2": "A critical deadline or an active business blocker requires immediate attention"
+            },
+            "probabilities": {
+              "0": 0.22,
+              "1": 0.7037,
+              "2": 0.0762
+            },
+            "score": 0.8562,
+            "type": "score"
+          }
+        },
+        "model": "laya-rl-agent",
+        "routing": {
+          "detection": {
+            "diacritic_rate": 0.0,
+            "is_english": true,
+            "language": "en",
+            "language_undecided": false,
+            "non_latin_fraction": 0.0,
+            "script": "latin",
+            "script_profile": {
+              "latin": 1.0
+            }
+          },
+          "model": "english",
+          "reason": "English Latin text",
+          "repo": "convaiinnovations/laya",
+          "workflow": null
+        },
+        "usage": {
+          "input_tokens": 269,
+          "output_tokens": 0
+        }
+      },
+      "text": "The setup wizard is confusing for new teams. A short example would help us continue next month."
+    },
+    {
+      "id": "mobile-003",
+      "observed": {
+        "answers": {
+          "human_response_requested": {
+            "action": {
+              "act_probability": 1.0
+            },
+            "confidence": 0.8669,
+            "noul": 0.1331,
+            "type": "noul"
+          },
+          "product_area": {
+            "action": {
+              "act_probability": 1.0
+            },
+            "choice": "mobile",
+            "confidence": 0.4727,
+            "probabilities": {
+              "checkout": 0.045,
+              "mobile": 0.7843,
+              "onboarding": 0.0458,
+              "other": 0.1249
+            },
+            "type": "choice"
+          },
+          "urgency": {
+            "action": {
+              "act_probability": 1.0
+            },
+            "confidence": 0.5433,
+            "legend": {
+              "0": "No time pressure; the request can wait for a normal release cycle",
+              "1": "A near-term deadline or a blocked workaround requires prompt attention",
+              "2": "A critical deadline or an active business blocker requires immediate attention"
+            },
+            "probabilities": {
+              "0": 0.0295,
+              "1": 0.8476,
+              "2": 0.1229
+            },
+            "score": 1.0934,
+            "type": "score"
+          }
+        },
+        "model": "laya-rl-agent",
+        "routing": {
+          "detection": {
+            "diacritic_rate": 0.0,
+            "is_english": true,
+            "language": "en",
+            "language_undecided": false,
+            "non_latin_fraction": 0.0,
+            "script": "latin",
+            "script_profile": {
+              "latin": 1.0
+            }
+          },
+          "model": "english",
+          "reason": "English Latin text",
+          "repo": "convaiinnovations/laya",
+          "workflow": null
+        },
+        "usage": {
+          "input_tokens": 293,
+          "output_tokens": 0
+        }
+      },
+      "text": "The iOS app takes 20 seconds to load the daily report. Please have someone call me before our 9 a.m. standup."
+    }
+  ]
+}

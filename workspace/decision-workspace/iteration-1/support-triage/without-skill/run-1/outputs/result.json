@@ -1,0 +1,231 @@
+{
+  "ticket": {
+    "id": "SUP-4411",
+    "title": "Charged twice for invoice #4411",
+    "text": "We were billed twice for invoice #4411 in March; the same amount hit our card on the 3rd and again on the 4th. Please refund the duplicate charge today. If this is not fixed by Friday we will cancel our plan."
+  },
+  "config": {
+    "library": "laya",
+    "library_url": "https://github.com/NandhaKishorM/laya",
+    "model": null,
+    "model_selection": "router-auto",
+    "timeout_seconds": 180.0,
+    "max_retries": 0,
+    "api_key_present": false,
+    "remote_endpoint_configured": false
+  },
+  "request": {
+    "state": {
+      "ticket": {
+        "id": "SUP-4411",
+        "title": "Charged twice for invoice #4411",
+        "text": "We were billed twice for invoice #4411 in March; the same amount hit our card on the 3rd and again on the 4th. Please refund the duplicate charge today. If this is not fixed by Friday we will cancel our plan."
+      }
+    },
+    "questions": {
+      "category": {
+        "type": "choice",
+        "instructions": {
+          "question": "Which single category best describes the main request in `ticket.text`?",
+          "inspect": "ticket.text",
+          "focus": "Classify the request the customer is making, not the channel or their tone."
+        },
+        "criteria": {
+          "billing": {
+            "what": "Charges, invoices, refunds, subscriptions, or plan changes",
+            "not_for": "Product errors, sign-in problems, or requests for a feature",
+            "examples": [
+              "We were charged twice this month",
+              "Please refund invoice #4411"
+            ]
+          },
+          "technical": {
+            "what": "Something is broken, erroring, or performing badly",
+            "not_for": "Money already charged, or questions about how to use a feature",
+            "examples": [
+              "The export job fails every night",
+              "The dashboard returns a 500"
+            ]
+          },
+          "account_access": {
+            "what": "Signing in, passwords, permissions, or seats and members",
+            "not_for": "Anything about an amount charged",
+            "examples": [
+              "I cannot log in after the reset",
+              "Remove a teammate from our org"
+            ]
+          },
+          "other": {
+            "what": "Any request that is not charges, product faults, or access",
+            "not_for": "Do not use this merely because the request is unclear",
+            "examples": [
+              "Who is your account manager?",
+              "Can you move us to the EU region?"
+            ]
+          }
+        }
+      },
+      "disruption": {
+        "type": "score",
+        "instructions": {
+          "question": "How much does the issue described in `ticket.text` disrupt the customer's use of the product?",
+          "inspect": "ticket.text",
+          "focus": "Judge the consequence for the customer, not how strongly they word it."
+        },
+        "criteria": [
+          {
+            "summary": "Work continues; the customer is only asking a question or a courtesy",
+            "signals": [
+              "No failure is reported",
+              "No deadline or consequence is stated"
+            ]
+          },
+          {
+            "summary": "A task is slowed or repeated, but a workaround lets the customer proceed",
+            "signals": [
+              "A feature is degraded",
+              "The customer describes a manual alternative"
+            ]
+          },
+          {
+            "summary": "The customer cannot complete the task at all, and says so",
+            "signals": [
+              "Work is blocked",
+              "The customer names a deadline, loss, or cancellation"
+            ]
+          }
+        ]
+      },
+      "refund_requested": {
+        "type": "noul",
+        "instructions": {
+          "question": "Does `ticket.text` explicitly ask for money back?",
+          "inspect": "ticket.text",
+          "focus": "Only an explicit request to refund, credit, or return a charge counts."
+        },
+        "criteria": {
+          "true": {
+            "description": "The customer asks for a refund, credit, or reversal of a charge",
+            "examples": [
+              "Please refund the duplicate charge",
+              "Credit our account for March"
+            ]
+          },
+          "false": {
+            "description": "The customer reports a charge, questions it, or threatens to leave, but never asks for money back",
+            "examples": [
+              "We were billed twice",
+              "Why is this invoice higher than last month?"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "model": "laya-rl-agent",
+    "answers": {
+      "category": {
+        "type": "choice",
+        "choice": "billing",
+        "probabilities": {
+          "billing": 0.5383,
+          "technical": 0.1795,
+          "account_access": 0.1564,
+          "other": 0.1258
+        },
+        "confidence": 0.1397,
+        "action": {
+          "act_probability": 1.0
+        }
+      },
+      "disruption": {
+        "type": "score",
+        "score": 1.2362,
+        "legend": {
+          "0": {
+            "summary": "Work continues; the customer is only asking a question or a courtesy",
+            "signals": [
+              "No failure is reported",
+              "No deadline or consequence is stated"
+            ]
+          },
+          "1": {
+            "summary": "A task is slowed or repeated, but a workaround lets the customer proceed",
+            "signals": [
+              "A feature is degraded",
+              "The customer describes a manual alternative"
+            ]
+          },
+          "2": {
+            "summary": "The customer cannot complete the task at all, and says so",
+            "signals": [
+              "Work is blocked",
+              "The customer names a deadline, loss, or cancellation"
+            ]
+          }
+        },
+        "probabilities": {
+          "0": 0.0806,
+          "1": 0.6026,
+          "2": 0.3168
+        },
+        "confidence": 0.206,
+        "action": {
+          "act_probability": 1.0
+        }
+      },
+      "refund_requested": {
+        "type": "noul",
+        "noul": 0.8421,
+        "confidence": 0.8421,
+        "action": {
+          "act_probability": 1.0
+        }
+      }
+    },
+    "usage": {
+      "input_tokens": 766,
+      "output_tokens": 0
+    },
+    "routing": {
+      "model": "english",
+      "repo": "convaiinnovations/laya",
+      "reason": "English Latin text",
+      "detection": {
+        "script": "latin",
+        "script_profile": {
+          "latin": 1.0
+        },
+        "language": "en",
+        "is_english": true,
+        "language_undecided": false,
+        "diacritic_rate": 0.0,
+        "non_latin_fraction": 0.0
+      },
+      "workflow": null
+    }
+  },
+  "routing_decision": {
+    "route": "human_review",
+    "queue": "support.triage",
+    "reason": "category confidence 0.14 < floor 0.60; category left to a person",
+    "automatic_action": false,
+    "human_review": true,
+    "signals": {
+      "category": "billing",
+      "category_confidence": 0.1397,
+      "category_confidence_floor": 0.6,
+      "disruption_score": 1.2362,
+      "disruption_normalised": 0.6181,
+      "disruption_confidence": 0.206,
+      "refund_probability": 0.8421,
+      "refund_threshold": 0.7
+    }
+  },
+  "call": {
+    "attempts": 1,
+    "elapsed_seconds": 11.957,
+    "error": null
+  }
+}

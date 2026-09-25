@@ -1,0 +1,72 @@
+{
+  "expectations": [
+    {
+      "text": "Python program imports/invokes local Laya and uses decision schema.",
+      "passed": true,
+      "evidence": "outputs/support_triage.py:37-44 imports and constructs the installed local laya.Router; lines 89-101 pass the same state and questions to router.predict(state, QUESTIONS) and retain raw_result/answers in the portable decision shape. transcript.md:18 records execution with the local laya-test virtual environment and DECISION_LIBRARY=laya."
+    },
+    {
+      "text": "One choice, one score, one noul question for same ticket state.",
+      "passed": true,
+      "evidence": "outputs/support_triage.py:11-34 defines exactly one category question of type choice, one disruption question of type score, and one refund_requested question of type noul; lines 89-98 submit them together with one state containing the same ticket. outputs/observed_result.json:47-78 preserves that single request."
+    },
+    {
+      "text": "Routes in Python with low-confidence human-review fallback.",
+      "passed": true,
+      "evidence": "outputs/support_triage.py:47-78 implements route() in Python and sends category confidence below 0.60 to human_review. outputs/support_triage.py:101 invokes that function on the observed Laya answers; the successful observed state instead cleared the confidence gate and met the refund policy, producing billing_refund."
+    },
+    {
+      "text": "Contains observed Laya answers and routing result from actual run.",
+      "passed": true,
+      "evidence": "outputs/observed_result.json:79-142 contains the raw Laya result from Router-selected model laya-rl-agent, including choice billing, score 1.0414, and noul 0.8003. Lines 144-156 record the Python routing result billing_refund with its confidence/probability signals and thresholds. transcript.md:18-25 records the successful command, exit code 0, and model selection."
+    },
+    {
+      "text": "No hard-coded API keys or inference endpoints.",
+      "passed": true,
+      "evidence": "outputs/support_triage.py:37-44 and 89-104 configure only DECISION_LIBRARY and optional DECISION_MODEL before constructing local Laya Router; no API key, token, base URL, HTTP client, or inference endpoint is embedded. transcript.md:18-21 and 35 confirm that no model, credential, or endpoint was supplied, and run.stderr only records unauthenticated Hugging Face Hub downloads."
+    }
+  ],
+  "summary": "Pass 5/5. The with-skill run provides an executable Python Laya decision program, one choice/one score/one noul request over one ticket state, Python confidence-gated routing with human-review fallback, and saved successful-run Laya answers plus the resulting route. It contains no hard-coded API key or inference endpoint.",
+  "execution_metrics": {
+    "expectations_total": 5,
+    "expectations_passed": 5,
+    "expectations_failed": 0,
+    "pass_rate": 1.0,
+    "artifacts_present": true,
+    "actual_run_evidence": true,
+    "model_invocations": 1,
+    "successful_model_invocations": 1,
+    "input_tokens": 267,
+    "output_tokens": 0
+  },
+  "timing": {
+    "total_tokens": null,
+    "duration_ms": 160000,
+    "total_duration_seconds": 160.0,
+    "executor_duration_seconds": 160.0
+  },
+  "claims": [
+    {
+      "text": "Laya selected the english Router model and returned a billing choice.",
+      "observed": true,
+      "evidence": "outputs/observed_result.json:79-138 records model=laya-rl-agent, Router model=english with reason='English Latin text', and category choice=billing."
+    },
+    {
+      "text": "Laya returned disruption score 1.0414.",
+      "observed": true,
+      "evidence": "outputs/observed_result.json:94-110 records type=score, score=1.0414, confidence=0.2155, and the three level probabilities."
+    },
+    {
+      "text": "Laya returned explicit-refund noul probability 0.8003.",
+      "observed": true,
+      "evidence": "outputs/observed_result.json:112-118 records type=noul, noul=0.8003, and confidence=0.8003."
+    },
+    {
+      "text": "Python routed the ticket to billing_refund.",
+      "observed": true,
+      "evidence": "outputs/observed_result.json:144-156 records route=billing_refund, category confidence 0.8264, refund probability 0.8003, minimum category confidence 0.6, and minimum refund probability 0.7."
+    }
+  ],
+  "user_notes_summary": "The transcript reports a successful local run in 40.91 seconds, while timing.json reports 160.0 seconds for the surrounding execution. The raw Laya answers and Python routing result are explicitly persisted and mutually consistent. No artifact collision or run-organization issue is evident.",
+  "eval_feedback": "The transcript-reported program duration and timing.json executor duration differ, but this does not affect any support-triage expectation; timing.json is recorded separately without treating the discrepancy as model-output evidence."
+}

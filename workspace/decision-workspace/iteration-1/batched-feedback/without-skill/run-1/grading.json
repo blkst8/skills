@@ -1,0 +1,72 @@
+{
+  "expectations": [
+    {
+      "text": "Python program processes three feedback states with same choice/score/noul questions.",
+      "passed": true,
+      "evidence": "outputs/batched_feedback.py:15-39 defines one shared QUESTIONS schema containing exactly one choice question (product_area), one score question (urgency), and one noul question (human_response_requested). outputs/batched_feedback.py:41-45 defines three states, and outputs/batched_feedback.py:54-58 sends every state through that same QUESTIONS object."
+    },
+    {
+      "text": "Computes counts/rankings/arithmetic in Python.",
+      "passed": true,
+      "evidence": "outputs/batched_feedback.py:60-66 derives product-area counts with Counter, extracts human-response probabilities and urgency scores, and ranks the scores in Python. outputs/batched_feedback.py:84-90 emits those aggregates and computes the noul >= 0.5 count in Python. outputs/observed_report.json:2-24 contains the resulting observed-run aggregates."
+    },
+    {
+      "text": "Uses batched or shared-schema execution path.",
+      "passed": true,
+      "evidence": "outputs/batched_feedback.py:48-58 has one run_batch application path over all three states and reuses the same immutable QUESTIONS schema for each Router.predict call. outputs/observed_report.json:51-67 records application_batch=true, shared_schema=true, state_count=3, and the three shared question IDs. The three backend calls are the installed Router API's per-state granularity, not unrelated question formats."
+    },
+    {
+      "text": "Report contains observed answers for all three and Python aggregates.",
+      "passed": true,
+      "evidence": "outputs/observed_report.json:69-139 contains the complete observed choice/score/noul answers for checkout-001, :140-209 contains them for onboarding-002, and :210-280 contains them for mobile-003, including probabilities, confidence, and Router metadata. outputs/observed_report.json:2-24 contains Python-computed area counts, scores, ranking, human-response probabilities, and threshold count. outputs/run_stdout.txt preserves the same completed report."
+    },
+    {
+      "text": "Uses DECISION_LIBRARY=laya and automatic Router selection without hard-coded credentials/endpoints.",
+      "passed": true,
+      "evidence": "outputs/batched_feedback.py:13 imports laya; :49-52 reads DECISION_LIBRARY, requires the value laya, and constructs laya.Router(); :54-58 calls Router.predict without a model argument so Router selects automatically. transcript.md:5-20 records the actual command with DECISION_LIBRARY=laya, DECISION_MODEL unset, exit code 0, and no credential or endpoint in the source. outputs/observed_report.json:51-67 confirms decision_library=laya, model_env=null, router_model_selection=automatic, and credentials_or_endpoints_in_source=false."
+    }
+  ],
+  "summary": "Pass 5/5. The baseline runs three feedback states through a shared Laya question schema, computes all aggregates in Python, preserves the actual answers for every state, and uses automatic Laya Router selection without embedded credentials or inference endpoints.",
+  "execution_metrics": {
+    "expectations_total": 5,
+    "expectations_passed": 5,
+    "expectations_failed": 0,
+    "pass_rate": 1.0,
+    "artifacts_present": true,
+    "actual_run_evidence": true,
+    "model_invocations": 3,
+    "successful_model_invocations": 3,
+    "input_tokens": 825,
+    "output_tokens": 0
+  },
+  "timing": {
+    "total_tokens": null,
+    "duration_ms": 255000,
+    "total_duration_seconds": 255.0,
+    "executor_duration_seconds": 255.0
+  },
+  "claims": [
+    {
+      "text": "All three states produced observed Laya answers using the same choice/score/noul schema.",
+      "observed": true,
+      "evidence": "outputs/observed_report.json:26-49 preserves the three-question schema, and :69-280 preserves observed answers and routing metadata for checkout-001, onboarding-002, and mobile-003."
+    },
+    {
+      "text": "Python produced the area counts, urgency ranking, and human-response threshold count from the observed answers.",
+      "observed": true,
+      "evidence": "outputs/batched_feedback.py:60-90 implements the calculations; outputs/observed_report.json:2-24 records checkout/mobile/onboarding counts of one each, ranking checkout-001 > mobile-003 > onboarding-002, and zero states at noul >= 0.5."
+    },
+    {
+      "text": "Laya Router automatically selected the English checkpoint for every state.",
+      "observed": true,
+      "evidence": "outputs/observed_report.json:60 records router_model_selection=automatic and model_env=null; the routing metadata at :116-132, :186-202, and :256-272 records routing.model=english for all three states."
+    },
+    {
+      "text": "No credential or inference endpoint is hard-coded in the program.",
+      "observed": true,
+      "evidence": "transcript.md:8-10 records the environment and absence of embedded values; outputs/batched_feedback.py:49-57 uses environment-backed library selection and Laya Router, with no credential or endpoint literal; outputs/observed_report.json:54 records credentials_or_endpoints_in_source=false."
+    }
+  ],
+  "user_notes_summary": "The transcript records a successful exit-code-0 local Laya run and preserves captured stdout, stderr, source, and report evidence. Laya warned that confidence from an affected temperature bucket is uncalibrated. The run transcript points to the shared batched-feedback/outputs/baseline script rather than the run-1 copy; that shared outputs area also contains a separately named with-skill artifact, so discovery by outputs/ can cause an organization/collision risk, but grading here is restricted to the assigned run-1 directory.",
+  "eval_feedback": "All five expectations are directly observable. Keep future run artifacts isolated under the documented run-1 directory; the shared batched-feedback/outputs hierarchy includes baseline and with-skill outputs, and the baseline transcript's executed source path points there rather than to the run-local copy."
+}

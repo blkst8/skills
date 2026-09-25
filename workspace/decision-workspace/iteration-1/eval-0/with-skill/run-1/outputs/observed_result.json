@@ -1,0 +1,162 @@
+{
+  "answers": {
+    "category": {
+      "action": {
+        "act_probability": 1.0
+      },
+      "choice": "billing",
+      "confidence": 0.8264,
+      "probabilities": {
+        "billing": 0.9613,
+        "other": 0.0204,
+        "technical": 0.0183
+      },
+      "type": "choice"
+    },
+    "disruption": {
+      "action": {
+        "act_probability": 1.0
+      },
+      "confidence": 0.2155,
+      "legend": {
+        "0": "No meaningful disruption; the user can continue normally",
+        "1": "A degraded feature; the user has a workaround",
+        "2": "A blocking issue; the user has no workaround"
+      },
+      "probabilities": {
+        "0": 0.453,
+        "1": 0.0526,
+        "2": 0.4944
+      },
+      "score": 1.0414,
+      "type": "score"
+    },
+    "refund_requested": {
+      "action": {
+        "act_probability": 1.0
+      },
+      "confidence": 0.8003,
+      "noul": 0.8003,
+      "type": "noul"
+    }
+  },
+  "configuration": {
+    "DECISION_LIBRARY": "laya",
+    "DECISION_MODEL": "automatic Laya Router selection"
+  },
+  "decision_request": {
+    "questions": {
+      "category": {
+        "criteria": {
+          "billing": "Duplicate charges, payments, invoices, subscriptions, or refunds",
+          "other": "Anything not covered by billing or technical support",
+          "technical": "Broken features, errors, outages, or access problems"
+        },
+        "instructions": "Which category best describes `ticket.title` and `ticket.text`?",
+        "type": "choice"
+      },
+      "disruption": {
+        "criteria": [
+          "No meaningful disruption; the user can continue normally",
+          "A degraded feature; the user has a workaround",
+          "A blocking issue; the user has no workaround"
+        ],
+        "instructions": "How disruptive is the issue described in `ticket.text`?",
+        "type": "score"
+      },
+      "refund_requested": {
+        "instructions": "Does `ticket.text` explicitly request a refund or credit?",
+        "type": "noul"
+      }
+    },
+    "state": {
+      "ticket": {
+        "text": "We were charged twice for March. Please refund the duplicate today.",
+        "title": "Duplicate charge on invoice #4411"
+      }
+    }
+  },
+  "raw_result": {
+    "answers": {
+      "category": {
+        "action": {
+          "act_probability": 1.0
+        },
+        "choice": "billing",
+        "confidence": 0.8264,
+        "probabilities": {
+          "billing": 0.9613,
+          "other": 0.0204,
+          "technical": 0.0183
+        },
+        "type": "choice"
+      },
+      "disruption": {
+        "action": {
+          "act_probability": 1.0
+        },
+        "confidence": 0.2155,
+        "legend": {
+          "0": "No meaningful disruption; the user can continue normally",
+          "1": "A degraded feature; the user has a workaround",
+          "2": "A blocking issue; the user has no workaround"
+        },
+        "probabilities": {
+          "0": 0.453,
+          "1": 0.0526,
+          "2": 0.4944
+        },
+        "score": 1.0414,
+        "type": "score"
+      },
+      "refund_requested": {
+        "action": {
+          "act_probability": 1.0
+        },
+        "confidence": 0.8003,
+        "noul": 0.8003,
+        "type": "noul"
+      }
+    },
+    "model": "laya-rl-agent",
+    "routing": {
+      "detection": {
+        "diacritic_rate": 0.0,
+        "is_english": true,
+        "language": "en",
+        "language_undecided": false,
+        "non_latin_fraction": 0.0,
+        "script": "latin",
+        "script_profile": {
+          "latin": 1.0
+        }
+      },
+      "model": "english",
+      "reason": "English Latin text",
+      "repo": "convaiinnovations/laya",
+      "workflow": null
+    },
+    "usage": {
+      "input_tokens": 267,
+      "output_tokens": 0
+    }
+  },
+  "routing_decision": {
+    "reason": "billing category and explicit refund probability is at least 0.70",
+    "route": "billing_refund",
+    "signals": {
+      "category": "billing",
+      "category_confidence": 0.8264,
+      "disruption_score": 1.0414,
+      "refund_probability": 0.8003
+    },
+    "thresholds": {
+      "minimum_category_confidence": 0.6,
+      "minimum_refund_probability": 0.7
+    }
+  },
+  "ticket": {
+    "text": "We were charged twice for March. Please refund the duplicate today.",
+    "title": "Duplicate charge on invoice #4411"
+  }
+}

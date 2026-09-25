@@ -1,0 +1,12 @@
+{
+  "eval_id": 2,
+  "eval_name": "moderation-gate",
+  "prompt": "Using the decision skill, write and run a moderation gate example with the installed Laya environment. The state will contain an ordinary post and an adversarial post containing prompt-injection text. Use a crisp noul question, a choice question with an other option, and confidence/probability-gated Python routing with a human-review fallback. Save the script and a report containing both inputs, raw model answers, and the chosen routes. Keep API keys and endpoint settings in environment variables.",
+  "assertions": [
+    "The output contains a Python program using Laya and the decision schema.",
+    "The program includes a crisp noul question and a choice question with an other option.",
+    "The program gates automatic action on confidence or probability and falls back to human review.",
+    "The report contains both ordinary and adversarial states, raw answers, and chosen routes from an actual run.",
+    "The program keeps credentials and endpoint configuration in environment variables."
+  ]
+}

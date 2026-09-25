@@ -1,0 +1,83 @@
+{
+  "expectations": [
+    {
+      "text": "Python program imports/invokes local Laya and uses decision schema.",
+      "passed": true,
+      "evidence": "outputs/ticket_triage.py:205-217 calls Router.predict(state, questions), and outputs/ticket_triage.py:231-243 imports laya.Router and constructs Router. The request and response in outputs/result.json:17-207 show the same state plus choice/score/noul question objects and the laya-rl-agent answer payload; config records remote_endpoint_configured=false."
+    },
+    {
+      "text": "One choice, one score, one noul question for same ticket state.",
+      "passed": true,
+      "evidence": "outputs/result.json:17-122 contains one shared ticket state and exactly three questions: category (choice), disruption (score), and refund_requested (noul). The saved raw response at outputs/result.json:127-185 contains the corresponding three observed answers."
+    },
+    {
+      "text": "Routes in Python with low-confidence human-review fallback.",
+      "passed": true,
+      "evidence": "outputs/ticket_triage.py:269-377 implements Python-only policy. Lines 298-309 route category confidence below 0.60 to human_review with automatic_action left false, while outputs/result.json:209-224 records this exact fallback being exercised at observed category confidence 0.1397."
+    },
+    {
+      "text": "Contains observed Laya answers and routing result from actual run.",
+      "passed": true,
+      "evidence": "outputs/result.json:126-207 records model laya-rl-agent answers: choice billing, score 1.2362, and noul 0.8421, plus Router-selected model english. outputs/result.json:209-230 records route human_review, queue support.triage, automatic_action=false, and a successful one-attempt call; outputs/run.log:3-12 independently contains the same observed values."
+    },
+    {
+      "text": "No hard-coded API keys or inference endpoints.",
+      "passed": true,
+      "evidence": "outputs/ticket_triage.py:74-108 reads DECISION_BASE_URL and DECISION_API_KEY from the environment, records only api_key_present, and rejects remote endpoint configuration for this local adapter. outputs/result.json:7-16 records api_key_present=false and remote_endpoint_configured=false. The only literal URL is the upstream Laya source/provenance URL at ticket_triage.py:38, not an inference endpoint, and no credential literal is present."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "expectations_total": 5,
+    "expectations_passed": 5,
+    "expectations_failed": 0,
+    "pass_rate": 1.0,
+    "artifacts_present": true,
+    "actual_run_evidence": true,
+    "model_invocations": 1,
+    "successful_model_invocations": 1,
+    "input_tokens": 766,
+    "output_tokens": 0
+  },
+  "timing": {
+    "total_tokens": null,
+    "duration_ms": 11411,
+    "total_duration_seconds": 11.411,
+    "executor_duration_seconds": 11.411
+  },
+  "claims": [
+    {
+      "text": "Laya returned billing for the choice question.",
+      "observed": true,
+      "evidence": "outputs/result.json:128-140: choice=billing, confidence=0.1397, billing probability=0.5383."
+    },
+    {
+      "text": "Laya returned disruption score 1.2362.",
+      "observed": true,
+      "evidence": "outputs/result.json:142-176: score=1.2362, confidence=0.206, with level probabilities 0.0806/0.6026/0.3168."
+    },
+    {
+      "text": "Laya returned explicit-refund noul probability 0.8421.",
+      "observed": true,
+      "evidence": "outputs/result.json:178-185: noul=0.8421 and confidence=0.8421."
+    },
+    {
+      "text": "Python routed the ticket to human review because category confidence was below the floor.",
+      "observed": true,
+      "evidence": "outputs/result.json:209-224: route=human_review, queue=support.triage, automatic_action=false, human_review=true, category_confidence=0.1397, floor=0.6."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": [
+      "The transcript says the deterministic local command was run twice; the final outputs/result.json and outputs/run.log agree on the substantive answers and routing result, while their call elapsed value is 11.957 seconds. timing.json independently reports 11.411 seconds. No artifact collision or run-organization issue is evident."
+    ]
+  },
+  "eval_feedback": "The saved result call elapsed time (11.957s) and timing.json duration (11.411s) differ, but both are successful-run evidence and this does not affect any expectation."
+}

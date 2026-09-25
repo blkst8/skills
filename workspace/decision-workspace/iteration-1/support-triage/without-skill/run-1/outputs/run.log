@@ -1,0 +1,12 @@
+/home/blkst8/src/github/blkst8/scripts/laya-test/.venv/lib/python3.12/site-packages/laya/router.py:187: RuntimeWarning: laya: this checkpoint ships temperatures outside [0.5, 5] which would distort confidence; clamping choice:11+=0.1006. Treat confidence from the affected buckets as uncalibrated.
+  agent = Agent(repo, device=self.device, token=self.token, subfolder=sub)
+ticket        : SUP-4411 — Charged twice for invoice #4411
+library       : laya (model selection: router-auto)
+router model  : english — English Latin text
+category      : billing (confidence 0.1397, probs {'billing': 0.5383, 'technical': 0.1795, 'account_access': 0.1564, 'other': 0.1258})
+disruption    : score 1.2362 (confidence 0.206, probs {'0': 0.0806, '1': 0.6026, '2': 0.3168})
+refund asked  : noul 0.8421 (confidence 0.8421)
+route         : human_review -> support.triage
+reason        : category confidence 0.14 < floor 0.60; category left to a person
+human review  : True
+elapsed       : 11.957s in 1 attempt(s)
