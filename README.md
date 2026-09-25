@@ -6,7 +6,7 @@
 
 ### A personal arsenal of agent skills — small, opinionated, load-bearing.
 
-[![Skills](https://img.shields.io/badge/skills-6-blueviolet)](#-the-skills)
+[![Skills](https://img.shields.io/badge/skills-7-blueviolet)](#-the-skills)
 [![Platform](https://img.shields.io/badge/agents-Claude%20%7C%20Codex%20%7C%20Cursor-success)](#-installation)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](#-license)
 [![Format](https://img.shields.io/badge/format-SKILL.md-orange)](#-anatomy)
@@ -40,8 +40,9 @@ This repository is my **personal collection of agent skills** — self-contained
 | [**`spec-review`**](skills/spec-review/SKILL.md) | Interactive review of an agent-spec `.md` file: one validation question at a time, answered with `y / n / tell you correct way` — applies corrections only after the user confirms. | — |
 | [**`feature-manager`**](skills/feature-manager/SKILL.md) | Decompose a markdown feature spec into a structured roadmap of goals + tasks, written to a versioned `/tmp/` checklist. | — |
 | [**`go-codebase-style`**](skills/go-codebase-style/SKILL.md) | Generate, scaffold, and review Go code following the blkst8 layered architecture (handlers → usecase → repository/service), with Echo, zap, Viper, sqlx, workers, and both Global-Singleton and Private-DI wiring. | — |
+| [**`decision`**](skills/decision/SKILL.md) | Build and improve typed decision-model programs with Laya or compatible backends: choice/score/noul questions, probabilistic routing, confidence gates, batching, and safe fallbacks. | — |
 
-### The six skills, in one breath
+### The seven skills, in one breath
 
 - **`trump`** makes sure the agent never loses sight of what matters.
 - **`self-healing`** makes sure the agent gets better every time it runs.
@@ -49,6 +50,7 @@ This repository is my **personal collection of agent skills** — self-contained
 - **`spec-review`** makes sure the agent does what *you* actually meant.
 - **`feature-manager`** makes sure big ideas become small, shippable tasks.
 - **`go-codebase-style`** makes sure every line of Go matches the house style.
+- **`decision`** makes sure bounded model judgments are combined with explicit application policy.
 
 ---
 
@@ -75,7 +77,7 @@ description: >
 ---
 ```
 
-A good skill is **specific about when to fire** and **rigorous about how to behave**. The six in this repo model that.
+A good skill is **specific about when to fire** and **rigorous about how to behave**. The seven in this repo model that.
 
 ---
 
